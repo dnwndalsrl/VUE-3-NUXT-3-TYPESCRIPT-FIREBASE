@@ -1,4 +1,4 @@
-export type LeaveType = 'full' | 'morning' | 'afternoon'
+﻿export type LeaveType = 'full' | 'morning' | 'afternoon'
 
 export interface LeaveSetting {
   year: number
@@ -11,6 +11,9 @@ export interface LeaveSetting {
 
 export interface LeaveRecord {
   id?: string
+  uid?: string
+  ownerName?: string
+  ownerEmail?: string
   date: string
   startDate?: string
   endDate?: string
@@ -21,6 +24,11 @@ export interface LeaveRecord {
   note?: string
   createdAt?: Date
   updatedAt?: Date
+}
+
+export interface PublicLeaveRecord extends LeaveRecord {
+  uid: string
+  ownerName: string
 }
 
 export interface LeaveSummary {

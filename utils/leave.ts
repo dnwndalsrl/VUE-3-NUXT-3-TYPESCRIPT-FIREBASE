@@ -1,4 +1,4 @@
-import type { LeaveRecord, LeaveSummary, LeaveType } from '~/types/leave'
+﻿import type { LeaveRecord, LeaveSummary, LeaveType } from '~/types/leave'
 
 export const leaveTypeLabels: Record<LeaveType, string> = {
   full: '연차',

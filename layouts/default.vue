@@ -1,10 +1,11 @@
-<script setup lang="ts">
+﻿<script setup lang="ts">
 const authStore = useAuthStore()
 
 const navItems = [
   { label: '대시보드', to: '/dashboard' },
   { label: '연차 등록', to: '/leave-record' },
   { label: '사용 내역', to: '/leave-history' },
+  { label: '공용 캘린더', to: '/public-calendar' },
   { label: '설정', to: '/settings' }
 ]
 </script>

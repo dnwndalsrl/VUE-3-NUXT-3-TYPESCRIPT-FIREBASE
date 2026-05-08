@@ -2,6 +2,7 @@
 import {
   addDoc,
   collection,
+  collectionGroup,
   deleteDoc,
   doc,
   getDoc,
@@ -13,7 +14,7 @@ import {
   updateDoc,
   type Firestore
 } from 'firebase/firestore'
-import type { LeaveRecord, LeaveSetting, LeaveSummary, LeaveType } from '~/types/leave'
+import type { LeaveRecord, LeaveSetting, LeaveSummary, LeaveType, PublicLeaveRecord } from '~/types/leave'
 import { calculateLeaveSummary } from '~/utils/leave'
 
 type LeaveTypeFilter = LeaveType | 'all'
@@ -22,7 +23,10 @@ interface LeaveState {
   currentYear: number
   setting: LeaveSetting
   records: LeaveRecord[]
+  publicRecords: PublicLeaveRecord[]
   loading: boolean
+  publicLoading: boolean
+  publicError: string
   displayName: string
   historyFilters: {
     year: string
@@ -43,7 +47,10 @@ export const useLeaveStore = defineStore('leave', {
     currentYear: new Date().getFullYear(),
     setting: createDefaultSetting(),
     records: [],
+    publicRecords: [],
     loading: false,
+    publicLoading: false,
+    publicError: '',
     displayName: '',
     historyFilters: {
       year: String(new Date().getFullYear()),
@@ -56,6 +63,8 @@ export const useLeaveStore = defineStore('leave', {
       calculateLeaveSummary(state.setting.totalDays, state.setting.carriedOverDays, state.records),
     sortedRecords: (state): LeaveRecord[] =>
       [...state.records].sort((a, b) => (b.startDate ?? b.date).localeCompare(a.startDate ?? a.date)),
+    sortedPublicRecords: (state): PublicLeaveRecord[] =>
+      [...state.publicRecords].sort((a, b) => (a.startDate ?? a.date).localeCompare(b.startDate ?? b.date)),
     availableYears: (state): string[] => {
       const years = new Set<string>([state.historyFilters.year])
 
@@ -193,6 +202,33 @@ export const useLeaveStore = defineStore('leave', {
         ...recordDoc.data()
       })) as LeaveRecord[]
     },
+    async fetchPublicRecords() {
+      this.publicLoading = true
+      this.publicError = ''
+      try {
+        const publicQuery = query(collectionGroup(this.getDb(), 'leaveRecords'))
+        const snap = await getDocs(publicQuery)
+
+        this.publicRecords = snap.docs.map((recordDoc) => {
+          const data = recordDoc.data() as LeaveRecord
+          const ownerUid = recordDoc.ref.parent.parent?.id ?? data.uid ?? ''
+
+          return {
+            id: recordDoc.id,
+            ...data,
+            uid: ownerUid,
+            ownerName: data.ownerName || data.ownerEmail || '사용자'
+          }
+        }) as PublicLeaveRecord[]
+
+        this.publicRecords.sort((a, b) => (b.startDate ?? b.date).localeCompare(a.startDate ?? a.date))
+      } catch (error) {
+        this.publicRecords = []
+        this.publicError = error instanceof Error ? error.message : '공용 캘린더를 불러오지 못했습니다.'
+      } finally {
+        this.publicLoading = false
+      }
+    },
     async load(uid: string, year?: number) {
       const targetYear = year ?? this.currentYear
       this.loading = true
@@ -203,7 +239,14 @@ export const useLeaveStore = defineStore('leave', {
       }
     },
     async addRecord(uid: string, record: LeaveRecord) {
+      const authStore = useAuthStore()
+      const ownerName = authStore.user?.displayName || this.displayName || authStore.user?.email || '사용자'
+      const ownerEmail = authStore.user?.email ?? ''
+
       await addDoc(this.recordsCollection(uid), {
+        uid,
+        ownerName,
+        ownerEmail,
         date: record.startDate ?? record.date,
         startDate: record.startDate ?? record.date,
         endDate: record.endDate ?? record.startDate ?? record.date,
@@ -237,8 +280,6 @@ export const useLeaveStore = defineStore('leave', {
     }
   }
 })
-
-
 
 
 
