@@ -1,3 +1,34 @@
+﻿import { existsSync, readFileSync } from 'node:fs'
+import { resolve } from 'node:path'
+
+const envPath = resolve(process.cwd(), '.env')
+
+if (existsSync(envPath)) {
+  const envFile = readFileSync(envPath, 'utf8')
+
+  for (const line of envFile.split(/\r?\n/)) {
+    const trimmed = line.trim()
+
+    if (!trimmed || trimmed.startsWith('#')) {
+      continue
+    }
+
+    const separatorIndex = trimmed.indexOf('=')
+
+    if (separatorIndex === -1) {
+      continue
+    }
+
+    const key = trimmed.slice(0, separatorIndex).trim()
+    const rawValue = trimmed.slice(separatorIndex + 1).trim()
+    const value = rawValue.replace(/^['"]|['"]$/g, '')
+
+    process.env[key] ??= value
+  }
+}
+
+const env = (key: string) => process.env[key] ?? ''
+
 export default defineNuxtConfig({
   compatibilityDate: '2024-10-01',
   devtools: { enabled: true },
@@ -9,12 +40,12 @@ export default defineNuxtConfig({
   },
   runtimeConfig: {
     public: {
-      firebaseApiKey: process.env.NUXT_PUBLIC_FIREBASE_API_KEY,
-      firebaseAuthDomain: process.env.NUXT_PUBLIC_FIREBASE_AUTH_DOMAIN,
-      firebaseProjectId: process.env.NUXT_PUBLIC_FIREBASE_PROJECT_ID,
-      firebaseStorageBucket: process.env.NUXT_PUBLIC_FIREBASE_STORAGE_BUCKET,
-      firebaseMessagingSenderId: process.env.NUXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID,
-      firebaseAppId: process.env.NUXT_PUBLIC_FIREBASE_APP_ID
+      firebaseApiKey: env('NUXT_PUBLIC_FIREBASE_API_KEY'),
+      firebaseAuthDomain: env('NUXT_PUBLIC_FIREBASE_AUTH_DOMAIN'),
+      firebaseProjectId: env('NUXT_PUBLIC_FIREBASE_PROJECT_ID'),
+      firebaseStorageBucket: env('NUXT_PUBLIC_FIREBASE_STORAGE_BUCKET'),
+      firebaseMessagingSenderId: env('NUXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID'),
+      firebaseAppId: env('NUXT_PUBLIC_FIREBASE_APP_ID')
     }
   },
   app: {

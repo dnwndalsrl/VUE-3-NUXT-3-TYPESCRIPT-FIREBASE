@@ -42,3 +42,26 @@ npm run dev
 npm run generate
 firebase deploy --only hosting
 ```
+
+## Firebase 콘솔 설정 순서
+
+1. Firebase Console에서 프로젝트를 생성합니다.
+2. Authentication > Sign-in method에서 Google provider를 활성화합니다.
+3. Project settings > General에서 Web app을 추가하고 Firebase config 값을 복사합니다.
+4. `.env` 파일의 `NUXT_PUBLIC_FIREBASE_*` 값에 복사한 config를 입력합니다.
+5. Firestore Database를 생성합니다. 테스트 중에는 로그인 사용자만 본인 문서에 접근하도록 Rules를 설정하세요.
+
+예시 Firestore Rules:
+
+```text
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    match /users/{userId}/{document=**} {
+      allow read, write: if request.auth != null && request.auth.uid == userId;
+    }
+  }
+}
+```
+
+`.env` 수정 후에는 dev server를 껐다가 다시 실행해야 값이 반영됩니다.

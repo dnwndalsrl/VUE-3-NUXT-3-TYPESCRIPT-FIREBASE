@@ -1,4 +1,4 @@
-import { defineStore } from 'pinia'
+﻿import { defineStore } from 'pinia'
 import {
   onAuthStateChanged,
   signOut,
@@ -27,7 +27,18 @@ export const useAuthStore = defineStore('auth', {
         return
       }
 
-      const { $auth } = useNuxtApp()
+      const { $auth, $firebaseConfigError } = useNuxtApp()
+
+      if (!$auth) {
+        this.user = null
+        this.loading = false
+        this.initialized = true
+        if ($firebaseConfigError) {
+          console.warn($firebaseConfigError)
+        }
+        return
+      }
+
       this.loading = true
 
       onAuthStateChanged($auth, (user) => {
@@ -37,11 +48,24 @@ export const useAuthStore = defineStore('auth', {
       })
     },
     async loginWithGoogle() {
+      const { $firebaseReady, $firebaseConfigError } = useNuxtApp()
+
+      if (!$firebaseReady) {
+        throw new Error($firebaseConfigError ?? 'Firebase 설정이 필요합니다.')
+      }
+
       await signInWithGooglePopup()
       await navigateTo('/dashboard')
     },
     async logout() {
       const { $auth } = useNuxtApp()
+
+      if (!$auth) {
+        this.user = null
+        await navigateTo('/login')
+        return
+      }
+
       await signOut($auth)
       this.user = null
       await navigateTo('/login')

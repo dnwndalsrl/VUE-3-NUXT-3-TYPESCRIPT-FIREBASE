@@ -1,4 +1,4 @@
-import { defineStore } from 'pinia'
+﻿import { defineStore } from 'pinia'
 import {
   addDoc,
   collection,
@@ -10,7 +10,8 @@ import {
   query,
   serverTimestamp,
   setDoc,
-  updateDoc
+  updateDoc,
+  type Firestore
 } from 'firebase/firestore'
 import type { LeaveRecord, LeaveSetting, LeaveSummary, LeaveType } from '~/types/leave'
 import { calculateLeaveSummary } from '~/utils/leave'
@@ -81,6 +82,15 @@ export const useLeaveStore = defineStore('leave', {
     }
   },
   actions: {
+    getDb(): Firestore {
+      const { $db, $firebaseConfigError } = useNuxtApp()
+
+      if (!$db) {
+        throw new Error($firebaseConfigError ?? 'Firebase 설정이 필요합니다.')
+      }
+
+      return $db
+    },
     setHistoryFilter<K extends keyof LeaveState['historyFilters']>(
       key: K,
       value: LeaveState['historyFilters'][K]
@@ -95,16 +105,13 @@ export const useLeaveStore = defineStore('leave', {
       }
     },
     userRoot(uid: string) {
-      const { $db } = useNuxtApp()
-      return doc($db, 'users', uid)
+      return doc(this.getDb(), 'users', uid)
     },
     settingsDoc(uid: string, year?: number) {
-      const { $db } = useNuxtApp()
-      return doc($db, 'users', uid, 'leaveSettings', String(year ?? this.currentYear))
+      return doc(this.getDb(), 'users', uid, 'leaveSettings', String(year ?? this.currentYear))
     },
     recordsCollection(uid: string) {
-      const { $db } = useNuxtApp()
-      return collection($db, 'users', uid, 'leaveRecords')
+      return collection(this.getDb(), 'users', uid, 'leaveRecords')
     },
     async ensureUser(uid: string, profile: { displayName?: string | null; email?: string | null }) {
       this.displayName = profile.displayName ?? this.displayName
@@ -211,8 +218,7 @@ export const useLeaveStore = defineStore('leave', {
       await this.fetchRecords(uid)
     },
     async updateRecord(uid: string, recordId: string, record: LeaveRecord) {
-      const { $db } = useNuxtApp()
-      await updateDoc(doc($db, 'users', uid, 'leaveRecords', recordId), {
+      await updateDoc(doc(this.getDb(), 'users', uid, 'leaveRecords', recordId), {
         date: record.startDate ?? record.date,
         startDate: record.startDate ?? record.date,
         endDate: record.endDate ?? record.startDate ?? record.date,
@@ -226,9 +232,13 @@ export const useLeaveStore = defineStore('leave', {
       await this.fetchRecords(uid)
     },
     async deleteRecord(uid: string, recordId: string) {
-      const { $db } = useNuxtApp()
-      await deleteDoc(doc($db, 'users', uid, 'leaveRecords', recordId))
+      await deleteDoc(doc(this.getDb(), 'users', uid, 'leaveRecords', recordId))
       this.records = this.records.filter((record) => record.id !== recordId)
     }
   }
 })
+
+
+
+
+
