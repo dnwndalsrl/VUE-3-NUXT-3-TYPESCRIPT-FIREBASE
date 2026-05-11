@@ -13,6 +13,7 @@
     </div>
 
     <LeaveRecordForm :busy="isLoading" submit-label="저장" @submit="handleSubmit" />
+    <AppLoading :show="isLoading" :message="loadingMessage" variant="block" />
     <p v-if="errorMessage" class="form-error">{{ errorMessage }}</p>
   </section>
 </template>
@@ -22,7 +23,7 @@ import type { LeaveRecord } from '~/types/leave'
 
 const authStore = useAuthStore()
 const leaveStore = useLeaveStore()
-const { isLoading, startLoading, stopLoading } = useLoading()
+const { isLoading, loadingMessage, startLoading, stopLoading } = useLoading('연차를 등록하는 중입니다.')
 const errorMessage = ref('')
 
 const handleSubmit = async (record: LeaveRecord) => {
@@ -37,7 +38,7 @@ const handleSubmit = async (record: LeaveRecord) => {
   }
 
   try {
-    startLoading()
+    startLoading('연차를 등록하는 중입니다.')
     errorMessage.value = ''
     await leaveStore.addRecord(authStore.user.uid, record)
     await navigateTo('/leave-history')
@@ -52,3 +53,5 @@ const handleSubmit = async (record: LeaveRecord) => {
 
 <style scoped lang="scss">
 </style>
+
+

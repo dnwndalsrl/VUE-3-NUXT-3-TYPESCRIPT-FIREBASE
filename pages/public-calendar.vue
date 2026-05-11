@@ -25,7 +25,8 @@
         <span>{{ recordsForSelectedMonth.length }}건</span>
       </div>
 
-      <template v-if="recordsForSelectedMonth.length">
+      <AppLoading v-if="leaveStore.publicLoading" message="월별 연차 사용자를 불러오는 중입니다." variant="block" />
+      <template v-else-if="recordsForSelectedMonth.length">
         <div class="record-list calendar-month-users-list">
           <article v-for="record in paginatedMonthlyUsers" :key="record.id" class="record-item calendar-upcoming-item">
             <div>
@@ -44,13 +45,15 @@
     <section class="content-panel calendar-panel">
       <div class="panel-header">
         <h2>{{ monthLabel }}</h2>
-        <span v-if="leaveStore.publicLoading">불러오는 중</span>
+        <AppLoading v-if="leaveStore.publicLoading" message="캘린더를 불러오는 중입니다." size="small" />
         <AppButton v-else variant="secondary" @click="refreshPublicCalendar">새로고침</AppButton>
       </div>
 
       <p v-if="leaveStore.publicError" class="form-error">{{ leaveStore.publicError }}</p>
 
-      <div class="calendar-weekdays">
+      <AppLoading v-if="leaveStore.publicLoading" message="캘린더를 불러오는 중입니다." variant="block" />
+
+      <div v-else class="calendar-weekdays">
         <span>일</span>
         <span>월</span>
         <span>화</span>
@@ -60,7 +63,7 @@
         <span>토</span>
       </div>
 
-      <div class="calendar-grid">
+      <div v-if="!leaveStore.publicLoading" class="calendar-grid">
         <article
           v-for="day in calendarDays"
           :key="day.key"
@@ -220,4 +223,7 @@ const refreshPublicCalendar = async () => {
 
 <style scoped lang="scss">
 </style>
+
+
+
 

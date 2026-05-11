@@ -15,6 +15,7 @@
         <AppInput v-model="form.userId" label="아이디" placeholder="아이디를 입력해 주세요" />
         <AppInput v-model="form.password" label="패스워드" type="password" placeholder="패스워드를 입력해 주세요" />
         <AppButton type="submit" block :disabled="!firebaseStatus.ready || authStore.loading">로그인</AppButton>
+        <AppLoading :show="authStore.loading" message="로그인 중입니다." variant="block" />
       </form>
 
       <p v-if="noticeMessage" class="success-message">{{ noticeMessage }}</p>
@@ -53,7 +54,7 @@ const login = async () => {
 
   try {
     await authStore.login(form.userId, form.password)
-  } catch (error) {
+  } catch (error: unknown) {
     errorMessage.value = error instanceof Error
       ? error.message
       : '로그인에 실패했습니다. 아이디와 패스워드를 확인해 주세요.'
@@ -63,4 +64,6 @@ const login = async () => {
 
 <style scoped lang="scss">
 </style>
+
+
 

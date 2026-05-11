@@ -13,11 +13,13 @@
           <h2>연차 승인 대기</h2>
           <p>승인된 연차만 공용 캘린더와 팀별 현황에 반영됩니다.</p>
         </div>
-        <span v-if="leaveStore.approvalLoading">불러오는 중</span>
+        <AppLoading v-if="leaveStore.approvalLoading" message="승인 대기 내역을 불러오는 중입니다." size="small" />
         <AppButton v-else variant="secondary" @click="leaveStore.fetchApprovalRecords">새로고침</AppButton>
       </div>
 
       <p v-if="leaveStore.approvalError" class="form-error">{{ leaveStore.approvalError }}</p>
+
+      <AppLoading v-if="leaveStore.approvalLoading" message="승인 대기 내역을 불러오는 중입니다." variant="block" />
 
       <div v-else-if="pendingRecords.length" class="record-list-group">
         <div class="record-list approval-list">
@@ -56,7 +58,7 @@
       <section class="content-panel">
         <div class="panel-header">
           <h2>회원 선택</h2>
-          <span v-if="leaveStore.memberStatusLoading">불러오는 중</span>
+          <AppLoading v-if="leaveStore.memberStatusLoading" message="회원 목록을 불러오는 중입니다." size="small" />
         </div>
 
         <label class="field">
@@ -64,7 +66,9 @@
           <input v-model.number="selectedYear" class="field__control" type="number" min="2000" max="2100">
         </label>
 
-        <div v-if="members.length" class="settings-member-list-group">
+        <AppLoading v-if="leaveStore.memberStatusLoading" message="회원 목록을 불러오는 중입니다." variant="block" />
+
+        <div v-else-if="members.length" class="settings-member-list-group">
           <div class="settings-member-list">
             <button
               v-for="member in paginatedMembers"
@@ -338,4 +342,6 @@ const reviewRecord = async (record: PublicLeaveRecord, status: 'approved' | 'rej
 
 <style scoped lang="scss">
 </style>
+
+
 

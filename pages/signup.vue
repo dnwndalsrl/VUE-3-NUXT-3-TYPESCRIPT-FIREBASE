@@ -22,6 +22,7 @@
         <AppInput v-model="form.userId" label="아이디" placeholder="예: cs01" />
         <AppInput v-model="form.password" label="패스워드" type="password" placeholder="6자 이상 입력해 주세요" />
         <AppButton type="submit" block :disabled="!firebaseStatus.ready || authStore.loading">회원가입</AppButton>
+        <AppLoading :show="authStore.loading" message="회원가입을 처리하는 중입니다." variant="block" />
       </form>
 
       <p class="login-card__link">
@@ -90,4 +91,6 @@ const signup = async () => {
 
 <style scoped lang="scss">
 </style>
+
+
 

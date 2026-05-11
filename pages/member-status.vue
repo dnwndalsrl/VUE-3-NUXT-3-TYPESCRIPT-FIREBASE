@@ -26,11 +26,13 @@
     <section class="content-panel">
       <div class="panel-header">
         <h2>회원별 현황</h2>
-        <span v-if="leaveStore.memberStatusLoading">불러오는 중</span>
+        <AppLoading v-if="leaveStore.memberStatusLoading" message="회원별 현황을 불러오는 중입니다." size="small" />
         <span v-else>{{ selectedYear }}년 기준 · 승인된 연차만 반영</span>
       </div>
 
       <p v-if="leaveStore.memberStatusError" class="form-error">{{ leaveStore.memberStatusError }}</p>
+
+      <AppLoading v-if="leaveStore.memberStatusLoading" message="회원별 현황을 불러오는 중입니다." variant="block" />
 
       <div v-else-if="statuses.length" class="status-table-wrap">
         <table class="status-table">
@@ -118,4 +120,6 @@ const refreshStatuses = async () => {
 
 <style scoped lang="scss">
 </style>
+
+
 
