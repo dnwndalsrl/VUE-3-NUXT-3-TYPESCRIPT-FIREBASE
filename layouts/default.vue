@@ -1,17 +1,4 @@
-﻿<script setup lang="ts">
-const authStore = useAuthStore()
-
-const navItems = computed(() => [
-  { label: '대시보드', to: '/dashboard' },
-  { label: '연차 등록', to: '/leave-record' },
-  { label: '사용 내역', to: '/leave-history' },
-  { label: '공용 캘린더', to: '/public-calendar' },
-  { label: '팀별 현황', to: '/member-status' },
-  ...(authStore.isAdmin ? [{ label: '설정', to: '/settings' }] : [])
-])
-</script>
-
-<template>
+﻿<template>
   <div class="app-shell">
     <aside v-if="authStore.isLoggedIn" class="sidebar">
       <NuxtLink to="/dashboard" class="brand">휴가 관리 포털</NuxtLink>
@@ -32,3 +19,20 @@ const navItems = computed(() => [
     </main>
   </div>
 </template>
+
+<script setup lang="ts">
+const authStore = useAuthStore()
+
+const navItems = computed(() => [
+  { label: '대시보드', to: '/dashboard' },
+  { label: '연차 등록', to: '/leave-record' },
+  { label: '사용 내역', to: '/leave-history' },
+  { label: '공용 캘린더', to: '/public-calendar' },
+  { label: '팀별 현황', to: '/member-status' },
+  ...(authStore.isAdmin ? [{ label: '설정', to: '/settings' }] : [])
+])
+</script>
+
+<style scoped lang="scss">
+</style>
+

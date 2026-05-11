@@ -1,4 +1,48 @@
-﻿<script setup lang="ts">
+﻿<template>
+  <form class="form-card" novalidate @submit.prevent="handleSubmit">
+    <div class="field">
+      <span class="field__label">사용 유형</span>
+      <div class="segmented segmented--leave-types">
+        <button
+          v-for="option in typeOptions"
+          :key="option.value"
+          type="button"
+          :class="{ active: form.type === option.value }"
+          @click="form.type = option.value"
+        >
+          {{ option.label }}
+        </button>
+      </div>
+    </div>
+
+    <AppDatePicker v-model="form.startDate" label="시작일" />
+    <AppDatePicker v-model="form.endDate" label="종료일" :disabled="isHalfDay" />
+
+    <div class="readonly-field">
+      <span>{{ isNonDeductible ? '연차 차감' : '사용 일수' }}</span>
+      <strong>{{ isNonDeductible ? '차감 없음' : formatLeaveDays(usedDays) }}</strong>
+    </div>
+
+    <label class="field">
+      <span class="field__label">{{ isNonDeductible ? '사유' : '메모' }}</span>
+      <textarea
+        v-model="form.memo"
+        class="field__control field__control--textarea"
+        :required="isNonDeductible"
+        :aria-invalid="showMemoError"
+        :placeholder="isNonDeductible ? '특별휴가 사유를 입력해주세요' : '연차 사용 목적이나 참고할 내용을 적어주세요'"
+      />
+      <span v-if="showMemoError" class="field__error">특별휴가 등록 시 사유를 입력해주세요.</span>
+    </label>
+
+    <div class="form-actions">
+      <AppButton v-if="initialValue" variant="secondary" @click="$emit('cancel')">취소</AppButton>
+      <AppButton type="submit" :disabled="!canSubmit">{{ submitLabel || '저장' }}</AppButton>
+    </div>
+  </form>
+</template>
+
+<script setup lang="ts">
 import type { LeaveRecord, LeaveType } from '~/types/leave'
 
 const props = defineProps<{
@@ -98,47 +142,6 @@ const handleSubmit = () => {
 }
 </script>
 
-<template>
-  <form class="form-card" novalidate @submit.prevent="handleSubmit">
-    <div class="field">
-      <span class="field__label">사용 유형</span>
-      <div class="segmented segmented--leave-types">
-        <button
-          v-for="option in typeOptions"
-          :key="option.value"
-          type="button"
-          :class="{ active: form.type === option.value }"
-          @click="form.type = option.value"
-        >
-          {{ option.label }}
-        </button>
-      </div>
-    </div>
-
-    <AppDatePicker v-model="form.startDate" label="시작일" />
-    <AppDatePicker v-model="form.endDate" label="종료일" :disabled="isHalfDay" />
-
-    <div class="readonly-field">
-      <span>{{ isNonDeductible ? '연차 차감' : '사용 일수' }}</span>
-      <strong>{{ isNonDeductible ? '차감 없음' : formatLeaveDays(usedDays) }}</strong>
-    </div>
-
-    <label class="field">
-      <span class="field__label">{{ isNonDeductible ? '사유' : '메모' }}</span>
-      <textarea
-        v-model="form.memo"
-        class="field__control field__control--textarea"
-        :required="isNonDeductible"
-        :aria-invalid="showMemoError"
-        :placeholder="isNonDeductible ? '특별휴가 사유를 입력해주세요' : '연차 사용 목적이나 참고할 내용을 적어주세요'"
-      />
-      <span v-if="showMemoError" class="field__error">특별휴가 등록 시 사유를 입력해주세요.</span>
-    </label>
-
-    <div class="form-actions">
-      <AppButton v-if="initialValue" variant="secondary" @click="$emit('cancel')">취소</AppButton>
-      <AppButton type="submit" :disabled="!canSubmit">{{ submitLabel || '저장' }}</AppButton>
-    </div>
-  </form>
-</template>
+<style scoped lang="scss">
+</style>
 

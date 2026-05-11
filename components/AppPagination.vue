@@ -1,4 +1,15 @@
-﻿<script setup lang="ts">
+﻿<template>
+  <div v-if="total > pageSize" class="pagination-bar">
+    <span>{{ start }}-{{ end }} / {{ total }}</span>
+    <div class="pagination-actions">
+      <AppButton variant="ghost" :disabled="page <= 1" @click="go(page - 1)">이전</AppButton>
+      <strong>{{ page }} / {{ totalPages }}</strong>
+      <AppButton variant="ghost" :disabled="page >= totalPages" @click="go(page + 1)">다음</AppButton>
+    </div>
+  </div>
+</template>
+
+<script setup lang="ts">
 const props = withDefaults(
   defineProps<{
     page: number
@@ -29,13 +40,6 @@ const go = (page: number) => {
 }
 </script>
 
-<template>
-  <div v-if="total > pageSize" class="pagination-bar">
-    <span>{{ start }}-{{ end }} / {{ total }}</span>
-    <div class="pagination-actions">
-      <AppButton variant="ghost" :disabled="page <= 1" @click="go(page - 1)">이전</AppButton>
-      <strong>{{ page }} / {{ totalPages }}</strong>
-      <AppButton variant="ghost" :disabled="page >= totalPages" @click="go(page + 1)">다음</AppButton>
-    </div>
-  </div>
-</template>
+<style scoped lang="scss">
+</style>
+

@@ -1,4 +1,92 @@
-﻿<script setup lang="ts">
+﻿<template>
+  <section class="page page--wide">
+    <header class="page-header calendar-header">
+      <div>
+        <p class="eyebrow">Shared Calendar</p>
+        <h1>공용 연차 캘린더</h1>
+      </div>
+      <div class="calendar-controls">
+        <AppButton variant="secondary" @click="addMonths(-1)">이전</AppButton>
+        <label class="field calendar-month-field">
+          <span class="field__label">월 선택</span>
+          <input v-model="selectedMonth" class="field__control" type="month">
+        </label>
+        <AppButton variant="secondary" @click="addMonths(1)">다음</AppButton>
+        <AppButton @click="goToday">오늘</AppButton>
+      </div>
+    </header>
+
+    <section class="content-panel calendar-month-users-panel">
+      <div class="panel-header">
+        <div>
+          <h2>{{ monthLabel }} 연차 사용자</h2>
+          <p>승인된 연차만 표시됩니다.</p>
+        </div>
+        <span>{{ recordsForSelectedMonth.length }}건</span>
+      </div>
+
+      <template v-if="recordsForSelectedMonth.length">
+        <div class="record-list calendar-month-users-list">
+          <article v-for="record in paginatedMonthlyUsers" :key="record.id" class="record-item calendar-upcoming-item">
+            <div>
+              <strong>{{ record.ownerName }}</strong>
+              <p>{{ record.startDate ?? record.date }} ~ {{ record.endDate ?? record.startDate ?? record.date }}</p>
+              <small>{{ leaveTypeLabels[record.type] }} · {{ record.reason || record.memo || '사유 없음' }}</small>
+            </div>
+            <span>{{ formatLeaveDays(Number(record.days ?? getLeaveDays(record.type))) }}</span>
+          </article>
+        </div>
+        <AppPagination v-model:page="monthlyUserPage" :total="recordsForSelectedMonth.length" :page-size="pageSize" />
+      </template>
+      <p v-else class="empty-state">선택한 월에 공유된 연차 사용자가 없습니다.</p>
+    </section>
+
+    <section class="content-panel calendar-panel">
+      <div class="panel-header">
+        <h2>{{ monthLabel }}</h2>
+        <span v-if="leaveStore.publicLoading">불러오는 중</span>
+        <AppButton v-else variant="secondary" @click="refreshPublicCalendar">새로고침</AppButton>
+      </div>
+
+      <p v-if="leaveStore.publicError" class="form-error">{{ leaveStore.publicError }}</p>
+
+      <div class="calendar-weekdays">
+        <span>일</span>
+        <span>월</span>
+        <span>화</span>
+        <span>수</span>
+        <span>목</span>
+        <span>금</span>
+        <span>토</span>
+      </div>
+
+      <div class="calendar-grid">
+        <article
+          v-for="day in calendarDays"
+          :key="day.key"
+          class="calendar-day"
+          :class="{ 'calendar-day--muted': !day.isCurrentMonth, 'calendar-day--today': day.isToday }"
+        >
+          <div class="calendar-day__top">
+            <strong>{{ day.day }}</strong>
+            <span v-if="day.records.length">{{ day.records.length }}</span>
+          </div>
+          <div class="calendar-events">
+            <div v-for="record in day.records.slice(0, 3)" :key="`${day.key}-${record.id}`" class="calendar-event" :class="`calendar-event--${record.type}`">
+              <span>{{ record.ownerName }}</span>
+              <small>{{ leaveTypeLabels[record.type] }}</small>
+            </div>
+            <button v-if="day.records.length > 3" type="button" class="calendar-more">
+              +{{ day.records.length - 3 }}건
+            </button>
+          </div>
+        </article>
+      </div>
+    </section>
+  </section>
+</template>
+
+<script setup lang="ts">
 import type { PublicLeaveRecord } from '~/types/leave'
 
 const authStore = useAuthStore()
@@ -130,90 +218,6 @@ const refreshPublicCalendar = async () => {
 }
 </script>
 
-<template>
-  <section class="page page--wide">
-    <header class="page-header calendar-header">
-      <div>
-        <p class="eyebrow">Shared Calendar</p>
-        <h1>공용 연차 캘린더</h1>
-      </div>
-      <div class="calendar-controls">
-        <AppButton variant="secondary" @click="addMonths(-1)">이전</AppButton>
-        <label class="field calendar-month-field">
-          <span class="field__label">월 선택</span>
-          <input v-model="selectedMonth" class="field__control" type="month">
-        </label>
-        <AppButton variant="secondary" @click="addMonths(1)">다음</AppButton>
-        <AppButton @click="goToday">오늘</AppButton>
-      </div>
-    </header>
+<style scoped lang="scss">
+</style>
 
-    <section class="content-panel calendar-month-users-panel">
-      <div class="panel-header">
-        <div>
-          <h2>{{ monthLabel }} 연차 사용자</h2>
-          <p>승인된 연차만 표시됩니다.</p>
-        </div>
-        <span>{{ recordsForSelectedMonth.length }}건</span>
-      </div>
-
-      <template v-if="recordsForSelectedMonth.length">
-        <div class="record-list calendar-month-users-list">
-          <article v-for="record in paginatedMonthlyUsers" :key="record.id" class="record-item calendar-upcoming-item">
-            <div>
-              <strong>{{ record.ownerName }}</strong>
-              <p>{{ record.startDate ?? record.date }} ~ {{ record.endDate ?? record.startDate ?? record.date }}</p>
-              <small>{{ leaveTypeLabels[record.type] }} · {{ record.reason || record.memo || '사유 없음' }}</small>
-            </div>
-            <span>{{ formatLeaveDays(Number(record.days ?? getLeaveDays(record.type))) }}</span>
-          </article>
-        </div>
-        <AppPagination v-model:page="monthlyUserPage" :total="recordsForSelectedMonth.length" :page-size="pageSize" />
-      </template>
-      <p v-else class="empty-state">선택한 월에 공유된 연차 사용자가 없습니다.</p>
-    </section>
-
-    <section class="content-panel calendar-panel">
-      <div class="panel-header">
-        <h2>{{ monthLabel }}</h2>
-        <span v-if="leaveStore.publicLoading">불러오는 중</span>
-        <AppButton v-else variant="secondary" @click="refreshPublicCalendar">새로고침</AppButton>
-      </div>
-
-      <p v-if="leaveStore.publicError" class="form-error">{{ leaveStore.publicError }}</p>
-
-      <div class="calendar-weekdays">
-        <span>일</span>
-        <span>월</span>
-        <span>화</span>
-        <span>수</span>
-        <span>목</span>
-        <span>금</span>
-        <span>토</span>
-      </div>
-
-      <div class="calendar-grid">
-        <article
-          v-for="day in calendarDays"
-          :key="day.key"
-          class="calendar-day"
-          :class="{ 'calendar-day--muted': !day.isCurrentMonth, 'calendar-day--today': day.isToday }"
-        >
-          <div class="calendar-day__top">
-            <strong>{{ day.day }}</strong>
-            <span v-if="day.records.length">{{ day.records.length }}</span>
-          </div>
-          <div class="calendar-events">
-            <div v-for="record in day.records.slice(0, 3)" :key="`${day.key}-${record.id}`" class="calendar-event" :class="`calendar-event--${record.type}`">
-              <span>{{ record.ownerName }}</span>
-              <small>{{ leaveTypeLabels[record.type] }}</small>
-            </div>
-            <button v-if="day.records.length > 3" type="button" class="calendar-more">
-              +{{ day.records.length - 3 }}건
-            </button>
-          </div>
-        </article>
-      </div>
-    </section>
-  </section>
-</template>

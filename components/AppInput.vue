@@ -1,3 +1,18 @@
+﻿<template>
+  <label class="field">
+    <span class="field__label">{{ label }}</span>
+    <input
+      class="field__control"
+      :type="type || 'text'"
+      :value="modelValue"
+      :placeholder="placeholder"
+      :min="min"
+      :step="step"
+      @input="$emit('update:modelValue', ($event.target as HTMLInputElement).value)"
+    >
+  </label>
+</template>
+
 <script setup lang="ts">
 defineProps<{
   label: string
@@ -13,17 +28,6 @@ defineEmits<{
 }>()
 </script>
 
-<template>
-  <label class="field">
-    <span class="field__label">{{ label }}</span>
-    <input
-      class="field__control"
-      :type="type || 'text'"
-      :value="modelValue"
-      :placeholder="placeholder"
-      :min="min"
-      :step="step"
-      @input="$emit('update:modelValue', ($event.target as HTMLInputElement).value)"
-    >
-  </label>
-</template>
+<style scoped lang="scss">
+</style>
+

@@ -1,83 +1,4 @@
-﻿<script setup lang="ts">
-const authStore = useAuthStore()
-const leaveStore = useLeaveStore()
-
-const uid = computed(() => authStore.user?.uid)
-const memberPage = ref(1)
-const pageSize = 5
-
-const formatDateKey = (date: Date) => {
-  const year = date.getFullYear()
-  const month = String(date.getMonth() + 1).padStart(2, '0')
-  const day = String(date.getDate()).padStart(2, '0')
-  return `${year}-${month}-${day}`
-}
-
-watch(
-  uid,
-  async (value) => {
-    if (!value || !authStore.user) {
-      return
-    }
-
-    await leaveStore.ensureUser(value, authStore.user)
-    await Promise.all([
-      leaveStore.load(value),
-      leaveStore.fetchAllMembersOverview(new Date().getFullYear()),
-      leaveStore.fetchAllPublicRecords()
-    ])
-  },
-  { immediate: true }
-)
-
-const setting = computed(() => leaveStore.setting)
-const summary = computed(() => leaveStore.summary)
-const recentRecords = computed(() => leaveStore.sortedRecords.slice(0, 5))
-const pendingCount = computed(() => leaveStore.records.filter((record) => getLeaveApprovalStatus(record) === 'pending').length)
-const todayKey = computed(() => formatDateKey(new Date()))
-const usageRate = computed(() => {
-  if (!summary.value.total) {
-    return 0
-  }
-
-  return Math.min(Math.round((summary.value.used / summary.value.total) * 100), 100)
-})
-const todayLeaveByUid = computed(() => {
-  const map = new Map<string, string>()
-
-  leaveStore.allPublicRecords.forEach((record) => {
-    const start = record.startDate ?? record.date
-    const end = record.endDate ?? record.startDate ?? record.date
-
-    if (start <= todayKey.value && end >= todayKey.value) {
-      map.set(record.uid, leaveTypeLabels[record.type])
-    }
-  })
-
-  return map
-})
-const memberTodayStatuses = computed(() =>
-  leaveStore.sortedAllMemberStatuses.map((member) => ({
-    ...member,
-    leaveLabel: todayLeaveByUid.value.get(member.uid) ?? '',
-    onLeave: todayLeaveByUid.value.has(member.uid)
-  }))
-)
-const paginatedMemberStatuses = computed(() => {
-  const start = (memberPage.value - 1) * pageSize
-  return memberTodayStatuses.value.slice(start, start + pageSize)
-})
-const todayOnLeaveCount = computed(() => memberTodayStatuses.value.filter((member) => member.onLeave).length)
-
-watch(
-  () => memberTodayStatuses.value.length,
-  () => {
-    memberPage.value = 1
-  }
-)
-</script>
-
-<template>
+﻿<template>
   <section class="page dashboard-page">
     <header class="page-header">
       <div>
@@ -162,3 +83,86 @@ watch(
     </section>
   </section>
 </template>
+
+<script setup lang="ts">
+const authStore = useAuthStore()
+const leaveStore = useLeaveStore()
+
+const uid = computed(() => authStore.user?.uid)
+const memberPage = ref(1)
+const pageSize = 5
+
+const formatDateKey = (date: Date) => {
+  const year = date.getFullYear()
+  const month = String(date.getMonth() + 1).padStart(2, '0')
+  const day = String(date.getDate()).padStart(2, '0')
+  return `${year}-${month}-${day}`
+}
+
+watch(
+  uid,
+  async (value) => {
+    if (!value || !authStore.user) {
+      return
+    }
+
+    await leaveStore.ensureUser(value, authStore.user)
+    await Promise.all([
+      leaveStore.load(value),
+      leaveStore.fetchAllMembersOverview(new Date().getFullYear()),
+      leaveStore.fetchAllPublicRecords()
+    ])
+  },
+  { immediate: true }
+)
+
+const setting = computed(() => leaveStore.setting)
+const summary = computed(() => leaveStore.summary)
+const recentRecords = computed(() => leaveStore.sortedRecords.slice(0, 5))
+const pendingCount = computed(() => leaveStore.records.filter((record) => getLeaveApprovalStatus(record) === 'pending').length)
+const todayKey = computed(() => formatDateKey(new Date()))
+const usageRate = computed(() => {
+  if (!summary.value.total) {
+    return 0
+  }
+
+  return Math.min(Math.round((summary.value.used / summary.value.total) * 100), 100)
+})
+const todayLeaveByUid = computed(() => {
+  const map = new Map<string, string>()
+
+  leaveStore.allPublicRecords.forEach((record) => {
+    const start = record.startDate ?? record.date
+    const end = record.endDate ?? record.startDate ?? record.date
+
+    if (start <= todayKey.value && end >= todayKey.value) {
+      map.set(record.uid, leaveTypeLabels[record.type])
+    }
+  })
+
+  return map
+})
+const memberTodayStatuses = computed(() =>
+  leaveStore.sortedAllMemberStatuses.map((member) => ({
+    ...member,
+    leaveLabel: todayLeaveByUid.value.get(member.uid) ?? '',
+    onLeave: todayLeaveByUid.value.has(member.uid)
+  }))
+)
+const paginatedMemberStatuses = computed(() => {
+  const start = (memberPage.value - 1) * pageSize
+  return memberTodayStatuses.value.slice(start, start + pageSize)
+})
+const todayOnLeaveCount = computed(() => memberTodayStatuses.value.filter((member) => member.onLeave).length)
+
+watch(
+  () => memberTodayStatuses.value.length,
+  () => {
+    memberPage.value = 1
+  }
+)
+</script>
+
+<style scoped lang="scss">
+</style>
+

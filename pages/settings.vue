@@ -1,4 +1,127 @@
-﻿<script setup lang="ts">
+﻿<template>
+  <section class="page page--wide">
+    <header class="page-header">
+      <div>
+        <p class="eyebrow">Admin Settings</p>
+        <h1>회원 연차 관리</h1>
+      </div>
+    </header>
+
+    <section class="content-panel approval-panel">
+      <div class="panel-header">
+        <div>
+          <h2>연차 승인 대기</h2>
+          <p>승인된 연차만 공용 캘린더와 팀별 현황에 반영됩니다.</p>
+        </div>
+        <span v-if="leaveStore.approvalLoading">불러오는 중</span>
+        <AppButton v-else variant="secondary" @click="leaveStore.fetchApprovalRecords">새로고침</AppButton>
+      </div>
+
+      <p v-if="leaveStore.approvalError" class="form-error">{{ leaveStore.approvalError }}</p>
+
+      <div v-else-if="pendingRecords.length" class="record-list-group">
+        <div class="record-list approval-list">
+          <article v-for="record in paginatedPendingRecords" :key="record.id" class="record-item record-item--editable approval-item">
+            <div>
+              <strong>{{ record.ownerName }}</strong>
+              <p>
+                {{ record.startDate || record.date }}
+                <template v-if="record.endDate && record.endDate !== (record.startDate || record.date)">
+                  - {{ record.endDate }}
+                </template>
+                · {{ leaveTypeLabels[record.type] }} · {{ formatLeaveDays(record.days ?? getLeaveDays(record.type)) }}
+              </p>
+              <small>{{ record.memo || record.note || record.reason || '사유 없음' }}</small>
+            </div>
+            <div class="record-actions">
+              <AppButton
+                variant="secondary"
+                :disabled="reviewingRecordId === record.id"
+                @click="reviewRecord(record, 'approved')"
+              >승인</AppButton>
+              <AppButton
+                variant="danger"
+                :disabled="reviewingRecordId === record.id"
+                @click="reviewRecord(record, 'rejected')"
+              >비승인</AppButton>
+            </div>
+          </article>
+        </div>
+        <AppPagination v-model:page="approvalPage" :total="pendingRecords.length" :page-size="pageSize" />
+      </div>
+      <p v-else class="empty-state">승인 대기 중인 연차가 없습니다.</p>
+    </section>
+
+    <div class="settings-admin-layout">
+      <section class="content-panel">
+        <div class="panel-header">
+          <h2>회원 선택</h2>
+          <span v-if="leaveStore.memberStatusLoading">불러오는 중</span>
+        </div>
+
+        <label class="field">
+          <span class="field__label">기준 연도</span>
+          <input v-model.number="selectedYear" class="field__control" type="number" min="2000" max="2100">
+        </label>
+
+        <div v-if="members.length" class="settings-member-list-group">
+          <div class="settings-member-list">
+            <button
+              v-for="member in paginatedMembers"
+              :key="member.uid"
+              type="button"
+              class="settings-member"
+              :class="{ 'settings-member--active': member.uid === selectedUid }"
+              @click="selectedUid = member.uid"
+            >
+              <strong>{{ member.displayName }}</strong>
+              <span>{{ member.team }} · {{ member.userId || '아이디 없음' }} · {{ member.approved ? '승인됨' : '승인 대기' }}</span>
+              <small v-if="member.pendingRecordsCount">연차 승인 대기 {{ member.pendingRecordsCount }}건</small>
+            </button>
+          </div>
+          <AppPagination v-model:page="memberPage" :total="members.length" :page-size="pageSize" />
+        </div>
+        <p v-else class="empty-state">관리할 회원이 없습니다.</p>
+      </section>
+
+      <section class="form-card">
+        <div class="panel-header">
+          <h2>{{ selectedMember?.displayName || '회원 선택' }}</h2>
+          <span>{{ selectedMember?.approved ? '승인됨' : '승인 대기' }}</span>
+        </div>
+
+        <form class="admin-setting-form" @submit.prevent="save">
+          <AppInput v-model="form.name" label="이름" placeholder="캘린더와 목록에 표시될 이름" />
+          <AppInput v-model="form.totalDays" label="올해 총 연차" type="number" :min="0" :step="0.5" />
+          <AppInput v-model="form.carryOverDays" label="이월 연차" type="number" :min="0" :step="0.5" />
+
+          <div class="readonly-field">
+            <span>실제 총 연차</span>
+            <strong>{{ formatLeaveDays(actualTotalDays) }}</strong>
+          </div>
+
+          <div class="admin-setting-actions">
+            <AppButton
+              v-if="selectedMember && !selectedMember.approved"
+              variant="secondary"
+              :disabled="saving || deleting || approvingMember"
+              @click="approveMember"
+            >회원 승인</AppButton>
+            <AppButton type="submit" :disabled="saving || deleting || approvingMember || !selectedMember">설정 저장</AppButton>
+            <AppButton variant="danger" :disabled="saving || deleting || approvingMember || !selectedMember" @click="deleteMember">
+              회원 삭제
+            </AppButton>
+          </div>
+        </form>
+
+        <p v-if="saved" class="success-message">회원 연차 설정을 저장했습니다.</p>
+        <p v-if="errorMessage" class="form-error">{{ errorMessage }}</p>
+      </section>
+    </div>
+  </section>
+</template>
+
+<script setup lang="ts">
 import type { PublicLeaveRecord } from '~/types/leave'
 
 const authStore = useAuthStore()
@@ -213,125 +336,6 @@ const reviewRecord = async (record: PublicLeaveRecord, status: 'approved' | 'rej
 }
 </script>
 
-<template>
-  <section class="page page--wide">
-    <header class="page-header">
-      <div>
-        <p class="eyebrow">Admin Settings</p>
-        <h1>회원 연차 관리</h1>
-      </div>
-    </header>
+<style scoped lang="scss">
+</style>
 
-    <section class="content-panel approval-panel">
-      <div class="panel-header">
-        <div>
-          <h2>연차 승인 대기</h2>
-          <p>승인된 연차만 공용 캘린더와 팀별 현황에 반영됩니다.</p>
-        </div>
-        <span v-if="leaveStore.approvalLoading">불러오는 중</span>
-        <AppButton v-else variant="secondary" @click="leaveStore.fetchApprovalRecords">새로고침</AppButton>
-      </div>
-
-      <p v-if="leaveStore.approvalError" class="form-error">{{ leaveStore.approvalError }}</p>
-
-      <div v-else-if="pendingRecords.length" class="record-list-group">
-        <div class="record-list approval-list">
-          <article v-for="record in paginatedPendingRecords" :key="record.id" class="record-item record-item--editable approval-item">
-            <div>
-              <strong>{{ record.ownerName }}</strong>
-              <p>
-                {{ record.startDate || record.date }}
-                <template v-if="record.endDate && record.endDate !== (record.startDate || record.date)">
-                  - {{ record.endDate }}
-                </template>
-                · {{ leaveTypeLabels[record.type] }} · {{ formatLeaveDays(record.days ?? getLeaveDays(record.type)) }}
-              </p>
-              <small>{{ record.memo || record.note || record.reason || '사유 없음' }}</small>
-            </div>
-            <div class="record-actions">
-              <AppButton
-                variant="secondary"
-                :disabled="reviewingRecordId === record.id"
-                @click="reviewRecord(record, 'approved')"
-              >승인</AppButton>
-              <AppButton
-                variant="danger"
-                :disabled="reviewingRecordId === record.id"
-                @click="reviewRecord(record, 'rejected')"
-              >비승인</AppButton>
-            </div>
-          </article>
-        </div>
-        <AppPagination v-model:page="approvalPage" :total="pendingRecords.length" :page-size="pageSize" />
-      </div>
-      <p v-else class="empty-state">승인 대기 중인 연차가 없습니다.</p>
-    </section>
-
-    <div class="settings-admin-layout">
-      <section class="content-panel">
-        <div class="panel-header">
-          <h2>회원 선택</h2>
-          <span v-if="leaveStore.memberStatusLoading">불러오는 중</span>
-        </div>
-
-        <label class="field">
-          <span class="field__label">기준 연도</span>
-          <input v-model.number="selectedYear" class="field__control" type="number" min="2000" max="2100">
-        </label>
-
-        <div v-if="members.length" class="settings-member-list-group">
-          <div class="settings-member-list">
-            <button
-              v-for="member in paginatedMembers"
-              :key="member.uid"
-              type="button"
-              class="settings-member"
-              :class="{ 'settings-member--active': member.uid === selectedUid }"
-              @click="selectedUid = member.uid"
-            >
-              <strong>{{ member.displayName }}</strong>
-              <span>{{ member.team }} · {{ member.userId || '아이디 없음' }} · {{ member.approved ? '승인됨' : '승인 대기' }}</span>
-              <small v-if="member.pendingRecordsCount">연차 승인 대기 {{ member.pendingRecordsCount }}건</small>
-            </button>
-          </div>
-          <AppPagination v-model:page="memberPage" :total="members.length" :page-size="pageSize" />
-        </div>
-        <p v-else class="empty-state">관리할 회원이 없습니다.</p>
-      </section>
-
-      <section class="form-card">
-        <div class="panel-header">
-          <h2>{{ selectedMember?.displayName || '회원 선택' }}</h2>
-          <span>{{ selectedMember?.approved ? '승인됨' : '승인 대기' }}</span>
-        </div>
-
-        <form class="admin-setting-form" @submit.prevent="save">
-          <AppInput v-model="form.name" label="이름" placeholder="캘린더와 목록에 표시될 이름" />
-          <AppInput v-model="form.totalDays" label="올해 총 연차" type="number" :min="0" :step="0.5" />
-          <AppInput v-model="form.carryOverDays" label="이월 연차" type="number" :min="0" :step="0.5" />
-
-          <div class="readonly-field">
-            <span>실제 총 연차</span>
-            <strong>{{ formatLeaveDays(actualTotalDays) }}</strong>
-          </div>
-
-          <div class="admin-setting-actions">
-            <AppButton
-              v-if="selectedMember && !selectedMember.approved"
-              variant="secondary"
-              :disabled="saving || deleting || approvingMember"
-              @click="approveMember"
-            >회원 승인</AppButton>
-            <AppButton type="submit" :disabled="saving || deleting || approvingMember || !selectedMember">설정 저장</AppButton>
-            <AppButton variant="danger" :disabled="saving || deleting || approvingMember || !selectedMember" @click="deleteMember">
-              회원 삭제
-            </AppButton>
-          </div>
-        </form>
-
-        <p v-if="saved" class="success-message">회원 연차 설정을 저장했습니다.</p>
-        <p v-if="errorMessage" class="form-error">{{ errorMessage }}</p>
-      </section>
-    </div>
-  </section>
-</template>

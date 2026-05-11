@@ -1,3 +1,9 @@
+﻿<template>
+  <button :type="type" class="app-button" :class="[`app-button--${variant}`, { 'app-button--block': block }]" :disabled="disabled">
+    <slot />
+  </button>
+</template>
+
 <script setup lang="ts">
 withDefaults(
   defineProps<{
@@ -15,8 +21,6 @@ withDefaults(
 )
 </script>
 
-<template>
-  <button :type="type" class="app-button" :class="[`app-button--${variant}`, { 'app-button--block': block }]" :disabled="disabled">
-    <slot />
-  </button>
-</template>
+<style scoped lang="scss">
+</style>
+

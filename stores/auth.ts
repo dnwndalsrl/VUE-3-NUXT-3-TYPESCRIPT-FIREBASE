@@ -1,19 +1,21 @@
 ﻿import { defineStore } from 'pinia'
+import { onAuthStateChanged, type User } from 'firebase/auth'
 import {
-  onAuthStateChanged,
-  signOut,
-  type User
-} from 'firebase/auth'
-import { doc, getDoc, serverTimestamp, setDoc } from 'firebase/firestore'
-import { loginWithPassword, signupWithPassword } from '~/utils/firebase'
+  createAccountWithPassword,
+  createUserProfile,
+  fetchUserProfile,
+  signInWithUserId,
+  signOutAuth,
+  type SignupPayload
+} from '~/services/auth.service'
 import type { UserProfile } from '~/types/user'
-import type { TeamRole } from '~/utils/team'
 
 interface AuthState {
   user: User | null
   profile: UserProfile | null
   loading: boolean
   initialized: boolean
+  errorMessage: string
 }
 
 export const useAuthStore = defineStore('auth', {
@@ -21,7 +23,8 @@ export const useAuthStore = defineStore('auth', {
     user: null,
     profile: null,
     loading: true,
-    initialized: false
+    initialized: false,
+    errorMessage: ''
   }),
   getters: {
     isLoggedIn: (state) => Boolean(state.user),
@@ -34,9 +37,9 @@ export const useAuthStore = defineStore('auth', {
         return
       }
 
-      const { $auth, $firebaseConfigError } = useNuxtApp()
+      const { $auth, $db, $firebaseConfigError } = useNuxtApp()
 
-      if (!$auth) {
+      if (!$auth || !$db) {
         this.user = null
         this.loading = false
         this.initialized = true
@@ -47,113 +50,148 @@ export const useAuthStore = defineStore('auth', {
       }
 
       this.loading = true
+      this.errorMessage = ''
 
       onAuthStateChanged($auth, async (user) => {
-        this.user = user
-        this.profile = user ? await this.fetchProfile(user.uid) : null
-        this.loading = false
-        this.initialized = true
+        try {
+          this.user = user
+          this.profile = user ? await fetchUserProfile($db, user.uid) : null
+          this.errorMessage = ''
+        } catch (error: unknown) {
+          console.error(error)
+          this.user = null
+          this.profile = null
+          this.errorMessage = error instanceof Error ? error.message : '회원 정보를 불러오지 못했습니다.'
+        } finally {
+          this.loading = false
+          this.initialized = true
+        }
       })
     },
-    async fetchProfile(uid: string) {
+    async fetchProfile(uid: string): Promise<UserProfile | null> {
       const { $db } = useNuxtApp()
 
       if (!$db) {
         return null
       }
 
-      const snap = await getDoc(doc($db, 'users', uid))
-      if (!snap.exists()) {
+      try {
+        this.loading = true
+        this.errorMessage = ''
+        const profile = await fetchUserProfile($db, uid)
+        this.profile = profile
+        return profile
+      } catch (error: unknown) {
+        console.error(error)
+        this.errorMessage = error instanceof Error ? error.message : '회원 정보를 불러오지 못했습니다.'
         return null
+      } finally {
+        this.loading = false
       }
-
-      return {
-        uid,
-        ...snap.data()
-      } as UserProfile
     },
-    async login(userId: string, password: string) {
+    async login(userId: string, password: string): Promise<void> {
       const { $auth, $firebaseReady, $firebaseConfigError } = useNuxtApp()
 
-      if (!$firebaseReady) {
-        throw new Error($firebaseConfigError ?? 'Firebase 설정이 필요합니다.')
-      }
+      try {
+        this.loading = true
+        this.errorMessage = ''
 
-      const credential = await loginWithPassword(userId, password)
-      this.user = credential.user
-      this.profile = await this.fetchProfile(credential.user.uid)
-
-      if (!this.profile) {
-        if ($auth) {
-          await signOut($auth)
+        if (!$firebaseReady) {
+          throw new Error($firebaseConfigError ?? 'Firebase 설정이 필요합니다.')
         }
-        this.user = null
-        throw new Error('회원 정보를 찾을 수 없습니다. 관리자에게 문의해 주세요.')
-      }
 
-      if (!this.profile.approved && this.profile.team !== '최고관리자') {
+        const credential = await signInWithUserId(userId, password)
+        this.user = credential.user
+        this.profile = await this.fetchProfile(credential.user.uid)
+
+        if (!this.profile) {
+          if ($auth) {
+            await signOutAuth($auth)
+          }
+          this.user = null
+          throw new Error('회원 정보를 찾을 수 없습니다. 관리자에게 문의해 주세요.')
+        }
+
+        if (!this.profile.approved && this.profile.team !== '최고관리자') {
+          if ($auth) {
+            await signOutAuth($auth)
+          }
+          this.user = null
+          this.profile = null
+          throw new Error('최고관리자 승인 후 사용할 수 있습니다.')
+        }
+
+        await navigateTo('/dashboard')
+      } catch (error: unknown) {
+        console.error(error)
+        this.errorMessage = error instanceof Error ? error.message : '로그인에 실패했습니다.'
+        throw error
+      } finally {
+        this.loading = false
+      }
+    },
+    async signup(form: SignupPayload): Promise<void> {
+      const { $auth, $firebaseReady, $firebaseConfigError, $db } = useNuxtApp()
+
+      try {
+        this.loading = true
+        this.errorMessage = ''
+
+        if (!$firebaseReady || !$db) {
+          throw new Error($firebaseConfigError ?? 'Firebase 설정이 필요합니다.')
+        }
+
+        const userId = form.userId.trim().toLowerCase()
+        const name = form.name.trim()
+        const credential = await createAccountWithPassword({
+          ...form,
+          userId,
+          name
+        })
+
+        await createUserProfile($db, {
+          uid: credential.user.uid,
+          userId,
+          name,
+          team: form.team,
+          email: credential.user.email ?? ''
+        })
+
         if ($auth) {
-          await signOut($auth)
+          await signOutAuth($auth)
         }
         this.user = null
         this.profile = null
-        throw new Error('최고관리자 승인 후 사용할 수 있습니다.')
+        await navigateTo('/login?pending=1')
+      } catch (error: unknown) {
+        console.error(error)
+        this.errorMessage = error instanceof Error ? error.message : '회원가입에 실패했습니다.'
+        throw error
+      } finally {
+        this.loading = false
       }
-
-      await navigateTo('/dashboard')
     },
-    async signup(form: { team: TeamRole; userId: string; name: string; password: string }) {
-      const { $auth, $firebaseReady, $firebaseConfigError, $db } = useNuxtApp()
-
-      if (!$firebaseReady || !$db) {
-        throw new Error($firebaseConfigError ?? 'Firebase 설정이 필요합니다.')
-      }
-
-      const userId = form.userId.trim().toLowerCase()
-      const name = form.name.trim()
-      const credential = await signupWithPassword(userId, form.password, name)
-      const profile: UserProfile = {
-        uid: credential.user.uid,
-        userId,
-        name,
-        team: form.team,
-        displayName: name,
-        email: credential.user.email ?? '',
-        approved: false
-      }
-
-      await setDoc(doc($db, 'users', credential.user.uid), {
-        userId: profile.userId,
-        name: profile.name,
-        team: profile.team,
-        displayName: profile.displayName,
-        email: profile.email,
-        approved: false,
-        createdAt: serverTimestamp(),
-        updatedAt: serverTimestamp()
-      })
-
-      if ($auth) {
-        await signOut($auth)
-      }
-      this.user = null
-      this.profile = null
-      await navigateTo('/login?pending=1')
-    },
-    async logout() {
+    async logout(): Promise<void> {
       const { $auth } = useNuxtApp()
 
-      if (!$auth) {
+      try {
+        this.loading = true
+        this.errorMessage = ''
+
+        if ($auth) {
+          await signOutAuth($auth)
+        }
+
         this.user = null
         this.profile = null
         await navigateTo('/login')
-        return
+      } catch (error: unknown) {
+        console.error(error)
+        this.errorMessage = error instanceof Error ? error.message : '로그아웃에 실패했습니다.'
+        throw error
+      } finally {
+        this.loading = false
       }
-
-      await signOut($auth)
-      this.user = null
-      this.profile = null
-      await navigateTo('/login')
     }
   }
 })

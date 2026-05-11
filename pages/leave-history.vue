@@ -1,105 +1,4 @@
-﻿<script setup lang="ts">
-import type { LeaveRecord, LeaveType } from '~/types/leave'
-
-const authStore = useAuthStore()
-const leaveStore = useLeaveStore()
-const editingRecord = ref<LeaveRecord | null>(null)
-const busy = ref(false)
-const errorMessage = ref('')
-const recordPage = ref(1)
-const pageSize = 5
-
-const monthOptions = [
-  { label: '전체 월', value: 'all' },
-  ...Array.from({ length: 12 }, (_, index) => {
-    const month = String(index + 1).padStart(2, '0')
-    return { label: `${index + 1}월`, value: month }
-  })
-]
-
-const typeOptions: Array<{ label: string; value: LeaveType | 'all' }> = [
-  { label: '전체 유형', value: 'all' },
-  { label: '연차', value: 'full' },
-  { label: '오전 반차', value: 'morning' },
-  { label: '오후 반차', value: 'afternoon' },
-  { label: '특별휴가', value: 'reserveTraining' }
-]
-
-watch(
-  () => authStore.user?.uid,
-  async (uid) => {
-    if (uid) {
-      await leaveStore.load(uid)
-    }
-  },
-  { immediate: true }
-)
-
-const paginatedRecords = computed(() => {
-  const start = (recordPage.value - 1) * pageSize
-  return leaveStore.filteredRecords.slice(start, start + pageSize)
-})
-
-watch(
-  () => [leaveStore.filteredRecords.length, leaveStore.historyFilters.year, leaveStore.historyFilters.month, leaveStore.historyFilters.type],
-  () => {
-    recordPage.value = 1
-  }
-)
-
-const canManageRecord = (record: LeaveRecord) => authStore.isAdmin || getLeaveApprovalStatus(record) === 'pending'
-
-const startEdit = (record: LeaveRecord) => {
-  if (!canManageRecord(record)) {
-    errorMessage.value = '승인된 연차는 최고관리자만 수정할 수 있습니다.'
-    return
-  }
-
-  errorMessage.value = ''
-  editingRecord.value = { ...record }
-}
-
-const updateRecord = async (record: LeaveRecord) => {
-  if (!authStore.user || !editingRecord.value?.id) {
-    return
-  }
-
-  busy.value = true
-  errorMessage.value = ''
-  try {
-    await leaveStore.updateRecord(authStore.user.uid, editingRecord.value.id, record)
-    editingRecord.value = null
-  } catch (error) {
-    errorMessage.value = error instanceof Error ? error.message : '사용 내역을 수정하지 못했습니다.'
-  } finally {
-    busy.value = false
-  }
-}
-
-const removeRecord = async (record: LeaveRecord) => {
-  if (!authStore.user || !record.id) {
-    return
-  }
-
-  if (!canManageRecord(record)) {
-    errorMessage.value = '승인된 연차는 최고관리자만 삭제할 수 있습니다.'
-    return
-  }
-
-  if (!confirm('이 사용 내역을 삭제할까요?')) {
-    return
-  }
-
-  errorMessage.value = ''
-  try {
-    await leaveStore.deleteRecord(authStore.user.uid, record.id)
-  } catch (error) {
-    errorMessage.value = error instanceof Error ? error.message : '사용 내역을 삭제하지 못했습니다.'
-  }
-}
-</script>
-
-<template>
+﻿<template>
   <section class="page">
     <header class="page-header">
       <div>
@@ -214,3 +113,108 @@ const removeRecord = async (record: LeaveRecord) => {
     </div>
   </section>
 </template>
+
+<script setup lang="ts">
+import type { LeaveRecord, LeaveType } from '~/types/leave'
+
+const authStore = useAuthStore()
+const leaveStore = useLeaveStore()
+const editingRecord = ref<LeaveRecord | null>(null)
+const busy = ref(false)
+const errorMessage = ref('')
+const recordPage = ref(1)
+const pageSize = 5
+
+const monthOptions = [
+  { label: '전체 월', value: 'all' },
+  ...Array.from({ length: 12 }, (_, index) => {
+    const month = String(index + 1).padStart(2, '0')
+    return { label: `${index + 1}월`, value: month }
+  })
+]
+
+const typeOptions: Array<{ label: string; value: LeaveType | 'all' }> = [
+  { label: '전체 유형', value: 'all' },
+  { label: '연차', value: 'full' },
+  { label: '오전 반차', value: 'morning' },
+  { label: '오후 반차', value: 'afternoon' },
+  { label: '특별휴가', value: 'reserveTraining' }
+]
+
+watch(
+  () => authStore.user?.uid,
+  async (uid) => {
+    if (uid) {
+      await leaveStore.load(uid)
+    }
+  },
+  { immediate: true }
+)
+
+const paginatedRecords = computed(() => {
+  const start = (recordPage.value - 1) * pageSize
+  return leaveStore.filteredRecords.slice(start, start + pageSize)
+})
+
+watch(
+  () => [leaveStore.filteredRecords.length, leaveStore.historyFilters.year, leaveStore.historyFilters.month, leaveStore.historyFilters.type],
+  () => {
+    recordPage.value = 1
+  }
+)
+
+const canManageRecord = (record: LeaveRecord) => authStore.isAdmin || getLeaveApprovalStatus(record) === 'pending'
+
+const startEdit = (record: LeaveRecord) => {
+  if (!canManageRecord(record)) {
+    errorMessage.value = '승인된 연차는 최고관리자만 수정할 수 있습니다.'
+    return
+  }
+
+  errorMessage.value = ''
+  editingRecord.value = { ...record }
+}
+
+const updateRecord = async (record: LeaveRecord) => {
+  if (!authStore.user || !editingRecord.value?.id) {
+    return
+  }
+
+  busy.value = true
+  errorMessage.value = ''
+  try {
+    await leaveStore.updateRecord(authStore.user.uid, editingRecord.value.id, record)
+    editingRecord.value = null
+  } catch (error) {
+    errorMessage.value = error instanceof Error ? error.message : '사용 내역을 수정하지 못했습니다.'
+  } finally {
+    busy.value = false
+  }
+}
+
+const removeRecord = async (record: LeaveRecord) => {
+  if (!authStore.user || !record.id) {
+    return
+  }
+
+  if (!canManageRecord(record)) {
+    errorMessage.value = '승인된 연차는 최고관리자만 삭제할 수 있습니다.'
+    return
+  }
+
+  if (!confirm('이 사용 내역을 삭제할까요?')) {
+    return
+  }
+
+  errorMessage.value = ''
+  try {
+    await leaveStore.deleteRecord(authStore.user.uid, record.id)
+  } catch (error) {
+    errorMessage.value = error instanceof Error ? error.message : '사용 내역을 삭제하지 못했습니다.'
+  }
+}
+</script>
+
+<style scoped lang="scss">
+</style>
+

@@ -1,52 +1,4 @@
-﻿<script setup lang="ts">
-const authStore = useAuthStore()
-const leaveStore = useLeaveStore()
-
-const selectedYear = ref(new Date().getFullYear())
-const statusPage = ref(1)
-const pageSize = 5
-
-watch(
-  () => authStore.profile,
-  async (profile) => {
-    if (profile) {
-      await leaveStore.fetchMemberStatuses(selectedYear.value)
-    }
-  },
-  { immediate: true }
-)
-
-watch(selectedYear, async (year) => {
-  if (authStore.profile) {
-    statusPage.value = 1
-    await leaveStore.fetchMemberStatuses(year)
-  }
-})
-
-const statuses = computed(() => leaveStore.sortedMemberStatuses)
-const paginatedStatuses = computed(() => {
-  const start = (statusPage.value - 1) * pageSize
-  return statuses.value.slice(start, start + pageSize)
-})
-const scopeLabel = computed(() => authStore.isAdmin ? '전체 팀' : authStore.profile?.team ?? '내 팀')
-const totalMembers = computed(() => statuses.value.length)
-const usedLeaveDays = computed(() => statuses.value.reduce((sum, member) => sum + member.summary.used, 0))
-const remainingLeaveDays = computed(() => statuses.value.reduce((sum, member) => sum + member.summary.remaining, 0))
-const pendingRecords = computed(() => statuses.value.reduce((sum, member) => sum + member.pendingRecordsCount, 0))
-
-watch(
-  () => statuses.value.length,
-  () => {
-    statusPage.value = 1
-  }
-)
-
-const refreshStatuses = async () => {
-  await leaveStore.fetchMemberStatuses(selectedYear.value)
-}
-</script>
-
-<template>
+﻿<template>
   <section class="page page--wide">
     <header class="page-header">
       <div>
@@ -115,3 +67,55 @@ const refreshStatuses = async () => {
     </section>
   </section>
 </template>
+
+<script setup lang="ts">
+const authStore = useAuthStore()
+const leaveStore = useLeaveStore()
+
+const selectedYear = ref(new Date().getFullYear())
+const statusPage = ref(1)
+const pageSize = 5
+
+watch(
+  () => authStore.profile,
+  async (profile) => {
+    if (profile) {
+      await leaveStore.fetchMemberStatuses(selectedYear.value)
+    }
+  },
+  { immediate: true }
+)
+
+watch(selectedYear, async (year) => {
+  if (authStore.profile) {
+    statusPage.value = 1
+    await leaveStore.fetchMemberStatuses(year)
+  }
+})
+
+const statuses = computed(() => leaveStore.sortedMemberStatuses)
+const paginatedStatuses = computed(() => {
+  const start = (statusPage.value - 1) * pageSize
+  return statuses.value.slice(start, start + pageSize)
+})
+const scopeLabel = computed(() => authStore.isAdmin ? '전체 팀' : authStore.profile?.team ?? '내 팀')
+const totalMembers = computed(() => statuses.value.length)
+const usedLeaveDays = computed(() => statuses.value.reduce((sum, member) => sum + member.summary.used, 0))
+const remainingLeaveDays = computed(() => statuses.value.reduce((sum, member) => sum + member.summary.remaining, 0))
+const pendingRecords = computed(() => statuses.value.reduce((sum, member) => sum + member.pendingRecordsCount, 0))
+
+watch(
+  () => statuses.value.length,
+  () => {
+    statusPage.value = 1
+  }
+)
+
+const refreshStatuses = async () => {
+  await leaveStore.fetchMemberStatuses(selectedYear.value)
+}
+</script>
+
+<style scoped lang="scss">
+</style>
+

@@ -45,7 +45,8 @@ export default defineNuxtConfig({
       firebaseProjectId: env('NUXT_PUBLIC_FIREBASE_PROJECT_ID'),
       firebaseStorageBucket: env('NUXT_PUBLIC_FIREBASE_STORAGE_BUCKET'),
       firebaseMessagingSenderId: env('NUXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID'),
-      firebaseAppId: env('NUXT_PUBLIC_FIREBASE_APP_ID')
+      firebaseAppId: env('NUXT_PUBLIC_FIREBASE_APP_ID'),
+      apiBaseUrl: env('NUXT_PUBLIC_API_BASE_URL')
     }
   },
   app: {
@@ -59,3 +60,4 @@ export default defineNuxtConfig({
     }
   }
 })
+

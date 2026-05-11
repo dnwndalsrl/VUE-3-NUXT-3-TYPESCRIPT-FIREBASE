@@ -1,7 +1,11 @@
+﻿<template>
+  <div />
+</template>
+
 <script setup lang="ts">
 await navigateTo('/dashboard')
 </script>
 
-<template>
-  <div />
-</template>
+<style scoped lang="scss">
+</style>
+
