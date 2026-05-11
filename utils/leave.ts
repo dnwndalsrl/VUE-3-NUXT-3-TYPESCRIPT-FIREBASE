@@ -1,12 +1,30 @@
-﻿import type { LeaveRecord, LeaveSummary, LeaveType } from '~/types/leave'
+import type { LeaveApprovalStatus, LeaveRecord, LeaveSummary, LeaveType } from '~/types/leave'
 
 export const leaveTypeLabels: Record<LeaveType, string> = {
   full: '연차',
   morning: '오전 반차',
-  afternoon: '오후 반차'
+  afternoon: '오후 반차',
+  reserveTraining: '특별휴가'
 }
 
-export const getLeaveDays = (type: LeaveType) => (type === 'full' ? 1 : 0.5)
+export const leaveApprovalStatusLabels: Record<LeaveApprovalStatus, string> = {
+  pending: '승인 대기',
+  approved: '승인됨',
+  rejected: '비승인'
+}
+
+export const getLeaveApprovalStatus = (record: LeaveRecord): LeaveApprovalStatus =>
+  record.approvalStatus ?? 'approved'
+
+export const isApprovedLeaveRecord = (record: LeaveRecord) => getLeaveApprovalStatus(record) === 'approved'
+
+export const getLeaveDays = (type: LeaveType) => {
+  if (type === 'reserveTraining') {
+    return 0
+  }
+
+  return type === 'full' ? 1 : 0.5
+}
 
 export const calculateLeaveRecordDays = (startDate: string, endDate: string) => {
   if (!startDate || !endDate) {
@@ -30,7 +48,8 @@ export const calculateLeaveSummary = (
   records: LeaveRecord[]
 ): LeaveSummary => {
   const total = annualDays + carriedOverDays
-  const used = records.reduce((sum, record) => sum + (record.days ?? getLeaveDays(record.type)), 0)
+  const approvedRecords = records.filter(isApprovedLeaveRecord)
+  const used = approvedRecords.reduce((sum, record) => sum + (record.days ?? getLeaveDays(record.type)), 0)
 
   return {
     total,

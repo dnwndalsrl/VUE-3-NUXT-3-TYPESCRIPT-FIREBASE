@@ -4,6 +4,8 @@ import type { PublicLeaveRecord } from '~/types/leave'
 const authStore = useAuthStore()
 const leaveStore = useLeaveStore()
 const selectedMonth = ref(new Date().toISOString().slice(0, 7))
+const monthlyUserPage = ref(1)
+const pageSize = 5
 
 watch(
   () => authStore.user?.uid,
@@ -60,12 +62,27 @@ const recordsForSelectedMonth = computed(() => {
   const end = new Date(monthDate.value.getFullYear(), monthDate.value.getMonth() + 1, 0)
   const monthEnd = formatDateKey(end)
 
-  return leaveStore.publicRecords.filter((record) => {
-    const start = record.startDate ?? record.date
-    const finish = record.endDate ?? record.startDate ?? record.date
-    return start <= monthEnd && finish >= monthStart
-  })
+  return leaveStore.publicRecords
+    .filter((record) => {
+      const start = record.startDate ?? record.date
+      const finish = record.endDate ?? record.startDate ?? record.date
+      return start <= monthEnd && finish >= monthStart
+    })
+    .slice()
+    .sort((a, b) => (a.startDate ?? a.date).localeCompare(b.startDate ?? b.date))
 })
+
+const paginatedMonthlyUsers = computed(() => {
+  const start = (monthlyUserPage.value - 1) * pageSize
+  return recordsForSelectedMonth.value.slice(start, start + pageSize)
+})
+
+watch(
+  () => [recordsForSelectedMonth.value.length, selectedMonth.value],
+  () => {
+    monthlyUserPage.value = 1
+  }
+)
 
 const recordsByDate = computed(() => {
   const map = new Map<string, PublicLeaveRecord[]>()
@@ -108,24 +125,9 @@ const calendarDays = computed(() => {
   })
 })
 
-const monthlyUsedDays = computed(() =>
-  recordsForSelectedMonth.value.reduce((sum, record) => sum + Number(record.days ?? getLeaveDays(record.type)), 0)
-)
-
-const peopleOnLeave = computed(() => new Set(recordsForSelectedMonth.value.map((record) => record.ownerName)).size)
-
 const refreshPublicCalendar = async () => {
   await leaveStore.fetchPublicRecords()
 }
-
-const upcomingRecords = computed(() => {
-  const today = formatDateKey(new Date())
-  return recordsForSelectedMonth.value
-    .filter((record) => (record.endDate ?? record.startDate ?? record.date) >= today)
-    .slice()
-    .sort((a, b) => (a.startDate ?? a.date).localeCompare(b.startDate ?? b.date))
-    .slice(0, 6)
-})
 </script>
 
 <template>
@@ -146,75 +148,72 @@ const upcomingRecords = computed(() => {
       </div>
     </header>
 
-    <div class="summary-grid calendar-summary-grid">
-      <SummaryCard label="이번 달 등록 건수" :value="`${recordsForSelectedMonth.length}건`" tone="primary" />
-      <SummaryCard label="공유된 사용 일수" :value="formatLeaveDays(monthlyUsedDays)" />
-      <SummaryCard label="연차 예정 인원" :value="`${peopleOnLeave}명`" tone="muted" />
-    </div>
-
-    <div class="calendar-layout">
-      <section class="content-panel calendar-panel">
-        <div class="panel-header">
-          <h2>{{ monthLabel }}</h2>
-          <span v-if="leaveStore.publicLoading">불러오는 중</span>
-          <AppButton v-else variant="secondary" @click="refreshPublicCalendar">새로고침</AppButton>
+    <section class="content-panel calendar-month-users-panel">
+      <div class="panel-header">
+        <div>
+          <h2>{{ monthLabel }} 연차 사용자</h2>
+          <p>승인된 연차만 표시됩니다.</p>
         </div>
+        <span>{{ recordsForSelectedMonth.length }}건</span>
+      </div>
 
-        <p v-if="leaveStore.publicError" class="form-error">{{ leaveStore.publicError }}</p>
-
-        <div class="calendar-weekdays">
-          <span>일</span>
-          <span>월</span>
-          <span>화</span>
-          <span>수</span>
-          <span>목</span>
-          <span>금</span>
-          <span>토</span>
-        </div>
-
-        <div class="calendar-grid">
-          <article
-            v-for="day in calendarDays"
-            :key="day.key"
-            class="calendar-day"
-            :class="{ 'calendar-day--muted': !day.isCurrentMonth, 'calendar-day--today': day.isToday }"
-          >
-            <div class="calendar-day__top">
-              <strong>{{ day.day }}</strong>
-              <span v-if="day.records.length">{{ day.records.length }}</span>
-            </div>
-            <div class="calendar-events">
-              <div v-for="record in day.records.slice(0, 3)" :key="`${day.key}-${record.id}`" class="calendar-event" :class="`calendar-event--${record.type}`">
-                <span>{{ record.ownerName }}</span>
-                <small>{{ leaveTypeLabels[record.type] }}</small>
-              </div>
-              <button v-if="day.records.length > 3" type="button" class="calendar-more">
-                +{{ day.records.length - 3 }}건
-              </button>
-            </div>
-          </article>
-        </div>
-      </section>
-
-      <aside class="content-panel calendar-side-panel">
-        <div class="panel-header">
-          <h2>다가오는 일정</h2>
-          <NuxtLink to="/leave-record">등록</NuxtLink>
-        </div>
-
-        <div v-if="upcomingRecords.length" class="record-list">
-          <article v-for="record in upcomingRecords" :key="record.id" class="record-item calendar-upcoming-item">
+      <template v-if="recordsForSelectedMonth.length">
+        <div class="record-list calendar-month-users-list">
+          <article v-for="record in paginatedMonthlyUsers" :key="record.id" class="record-item calendar-upcoming-item">
             <div>
               <strong>{{ record.ownerName }}</strong>
               <p>{{ record.startDate ?? record.date }} ~ {{ record.endDate ?? record.startDate ?? record.date }}</p>
-              <small>{{ leaveTypeLabels[record.type] }} · {{ record.reason || '사유 없음' }}</small>
+              <small>{{ leaveTypeLabels[record.type] }} · {{ record.reason || record.memo || '사유 없음' }}</small>
             </div>
             <span>{{ formatLeaveDays(Number(record.days ?? getLeaveDays(record.type))) }}</span>
           </article>
         </div>
-        <p v-else class="empty-state">이번 달에 공유된 연차 일정이 없습니다.</p>
-      </aside>
-    </div>
+        <AppPagination v-model:page="monthlyUserPage" :total="recordsForSelectedMonth.length" :page-size="pageSize" />
+      </template>
+      <p v-else class="empty-state">선택한 월에 공유된 연차 사용자가 없습니다.</p>
+    </section>
+
+    <section class="content-panel calendar-panel">
+      <div class="panel-header">
+        <h2>{{ monthLabel }}</h2>
+        <span v-if="leaveStore.publicLoading">불러오는 중</span>
+        <AppButton v-else variant="secondary" @click="refreshPublicCalendar">새로고침</AppButton>
+      </div>
+
+      <p v-if="leaveStore.publicError" class="form-error">{{ leaveStore.publicError }}</p>
+
+      <div class="calendar-weekdays">
+        <span>일</span>
+        <span>월</span>
+        <span>화</span>
+        <span>수</span>
+        <span>목</span>
+        <span>금</span>
+        <span>토</span>
+      </div>
+
+      <div class="calendar-grid">
+        <article
+          v-for="day in calendarDays"
+          :key="day.key"
+          class="calendar-day"
+          :class="{ 'calendar-day--muted': !day.isCurrentMonth, 'calendar-day--today': day.isToday }"
+        >
+          <div class="calendar-day__top">
+            <strong>{{ day.day }}</strong>
+            <span v-if="day.records.length">{{ day.records.length }}</span>
+          </div>
+          <div class="calendar-events">
+            <div v-for="record in day.records.slice(0, 3)" :key="`${day.key}-${record.id}`" class="calendar-event" :class="`calendar-event--${record.type}`">
+              <span>{{ record.ownerName }}</span>
+              <small>{{ leaveTypeLabels[record.type] }}</small>
+            </div>
+            <button v-if="day.records.length > 3" type="button" class="calendar-more">
+              +{{ day.records.length - 3 }}건
+            </button>
+          </div>
+        </article>
+      </div>
+    </section>
   </section>
 </template>
-

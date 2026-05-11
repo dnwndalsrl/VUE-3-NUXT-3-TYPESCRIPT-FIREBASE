@@ -50,7 +50,7 @@ export default defineNuxtConfig({
   },
   app: {
     head: {
-      title: '연차 체크',
+      title: '휴가 관리 포털',
       htmlAttrs: { lang: 'ko' },
       meta: [
         { name: 'viewport', content: 'width=device-width, initial-scale=1' },

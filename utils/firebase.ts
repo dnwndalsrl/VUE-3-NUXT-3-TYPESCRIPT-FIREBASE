@@ -1,8 +1,9 @@
 ﻿import { getApps, initializeApp, type FirebaseApp, type FirebaseOptions } from 'firebase/app'
 import {
+  createUserWithEmailAndPassword,
   getAuth,
-  GoogleAuthProvider,
-  signInWithPopup,
+  signInWithEmailAndPassword,
+  updateProfile,
   type Auth,
   type UserCredential
 } from 'firebase/auth'
@@ -80,11 +81,30 @@ export const initFirebase = () => {
   return { firebaseApp, auth, db }
 }
 
-export const googleProvider = new GoogleAuthProvider()
+export const authEmailDomain = 'leave-tracker.local'
 
-export const loginWithGoogle = async (): Promise<UserCredential> => {
+export const userIdToEmail = (userId: string) => `${userId.trim().toLowerCase()}@${authEmailDomain}`
+
+export const emailToUserId = (email?: string | null) => email?.split('@')[0] ?? ''
+
+export const loginWithPassword = async (userId: string, password: string): Promise<UserCredential> => {
   const { auth: firebaseAuth } = initFirebase()
-  return signInWithPopup(firebaseAuth, googleProvider)
+  return signInWithEmailAndPassword(firebaseAuth, userIdToEmail(userId), password)
+}
+
+export const signupWithPassword = async (
+  userId: string,
+  password: string,
+  displayName: string
+): Promise<UserCredential> => {
+  const { auth: firebaseAuth } = initFirebase()
+  const credential = await createUserWithEmailAndPassword(firebaseAuth, userIdToEmail(userId), password)
+
+  if (displayName) {
+    await updateProfile(credential.user, { displayName })
+  }
+
+  return credential
 }
 
 

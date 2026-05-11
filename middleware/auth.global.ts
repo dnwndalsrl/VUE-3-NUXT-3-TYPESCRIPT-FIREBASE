@@ -3,7 +3,7 @@ export default defineNuxtRouteMiddleware(async (to) => {
     return
   }
 
-  const publicRoutes = ['/login']
+  const publicRoutes = ['/login', '/signup']
   const authStore = useAuthStore()
   authStore.initAuth()
 
@@ -15,7 +15,7 @@ export default defineNuxtRouteMiddleware(async (to) => {
     return navigateTo('/login')
   }
 
-  if (authStore.isLoggedIn && to.path === '/login') {
+  if (authStore.isLoggedIn && publicRoutes.includes(to.path)) {
     return navigateTo('/dashboard')
   }
 })

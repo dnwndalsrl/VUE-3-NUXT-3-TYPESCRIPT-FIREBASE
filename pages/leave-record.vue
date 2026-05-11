@@ -38,6 +38,11 @@ const handleSubmit = async (record: LeaveRecord) => {
       </div>
     </header>
 
+    <div class="content-panel approval-note">
+      <strong>등록한 연차는 최고관리자 승인 후 반영됩니다.</strong>
+      <p>승인 전에는 사용 내역에서 상태를 확인할 수 있고, 공용 캘린더와 전체 현황에는 표시되지 않습니다.</p>
+    </div>
+
     <LeaveRecordForm :busy="saving" submit-label="저장" @submit="handleSubmit" />
     <p v-if="errorMessage" class="form-error">{{ errorMessage }}</p>
   </section>

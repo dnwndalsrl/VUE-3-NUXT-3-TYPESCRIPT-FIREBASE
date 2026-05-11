@@ -1,4 +1,4 @@
-<script setup lang="ts">
+﻿<script setup lang="ts">
 import type { LeaveRecord, LeaveType } from '~/types/leave'
 
 const props = defineProps<{
@@ -18,16 +18,25 @@ const form = reactive({
   endDate: props.initialValue?.endDate ?? props.initialValue?.startDate ?? props.initialValue?.date ?? '',
   memo: props.initialValue?.memo ?? props.initialValue?.note ?? ''
 })
+const submitAttempted = ref(false)
 
 const typeOptions: Array<{ label: string; value: LeaveType }> = [
   { label: '연차', value: 'full' },
   { label: '오전 반차', value: 'morning' },
-  { label: '오후 반차', value: 'afternoon' }
+  { label: '오후 반차', value: 'afternoon' },
+  { label: '특별휴가', value: 'reserveTraining' }
 ]
 
 const isHalfDay = computed(() => form.type === 'morning' || form.type === 'afternoon')
+const isNonDeductible = computed(() => form.type === 'reserveTraining')
+const hasRequiredMemo = computed(() => !isNonDeductible.value || form.memo.trim().length > 0)
+const showMemoError = computed(() => submitAttempted.value && !hasRequiredMemo.value)
 
 const usedDays = computed(() => {
+  if (isNonDeductible.value) {
+    return 0
+  }
+
   if (isHalfDay.value) {
     return 0.5
   }
@@ -35,7 +44,10 @@ const usedDays = computed(() => {
   return calculateLeaveRecordDays(form.startDate, form.endDate)
 })
 
-const canSubmit = computed(() => Boolean(form.startDate) && usedDays.value > 0 && !props.busy)
+const canSubmit = computed(() => {
+  const hasValidDate = Boolean(form.startDate) && Boolean(form.endDate)
+  return hasValidDate && (usedDays.value > 0 || isNonDeductible.value) && !props.busy
+})
 
 watch(
   () => props.initialValue,
@@ -66,7 +78,9 @@ watch(
 )
 
 const handleSubmit = () => {
-  if (!canSubmit.value) {
+  submitAttempted.value = true
+
+  if (!canSubmit.value || !hasRequiredMemo.value) {
     return
   }
 
@@ -78,17 +92,17 @@ const handleSubmit = () => {
     endDate,
     type: form.type,
     days: usedDays.value,
-    memo: form.memo,
-    note: form.memo
+    memo: form.memo.trim(),
+    note: form.memo.trim()
   })
 }
 </script>
 
 <template>
-  <form class="form-card" @submit.prevent="handleSubmit">
+  <form class="form-card" novalidate @submit.prevent="handleSubmit">
     <div class="field">
-      <span class="field__label">휴가 유형</span>
-      <div class="segmented">
+      <span class="field__label">사용 유형</span>
+      <div class="segmented segmented--leave-types">
         <button
           v-for="option in typeOptions"
           :key="option.value"
@@ -105,17 +119,20 @@ const handleSubmit = () => {
     <AppDatePicker v-model="form.endDate" label="종료일" :disabled="isHalfDay" />
 
     <div class="readonly-field">
-      <span>사용 일수</span>
-      <strong>{{ formatLeaveDays(usedDays) }}</strong>
+      <span>{{ isNonDeductible ? '연차 차감' : '사용 일수' }}</span>
+      <strong>{{ isNonDeductible ? '차감 없음' : formatLeaveDays(usedDays) }}</strong>
     </div>
 
     <label class="field">
-      <span class="field__label">메모</span>
+      <span class="field__label">{{ isNonDeductible ? '사유' : '메모' }}</span>
       <textarea
         v-model="form.memo"
         class="field__control field__control--textarea"
-        placeholder="연차 사용 목적이나 참고할 내용을 적어두세요"
+        :required="isNonDeductible"
+        :aria-invalid="showMemoError"
+        :placeholder="isNonDeductible ? '특별휴가 사유를 입력해주세요' : '연차 사용 목적이나 참고할 내용을 적어주세요'"
       />
+      <span v-if="showMemoError" class="field__error">특별휴가 등록 시 사유를 입력해주세요.</span>
     </label>
 
     <div class="form-actions">
@@ -124,3 +141,4 @@ const handleSubmit = () => {
     </div>
   </form>
 </template>
+

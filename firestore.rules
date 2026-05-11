@@ -1,21 +1,125 @@
 rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
+    function signedIn() {
+      return request.auth != null;
+    }
+
+    function currentUserExists() {
+      return signedIn() && exists(/databases/$(database)/documents/users/$(request.auth.uid));
+    }
+
+    function currentUser() {
+      return get(/databases/$(database)/documents/users/$(request.auth.uid));
+    }
+
+    function isAdmin() {
+      return currentUserExists() && currentUser().data.team == '최고관리자';
+    }
+
+    function sameTeam(team) {
+      return currentUserExists() && currentUser().data.team == team;
+    }
+
+    function targetUser(userId) {
+      return get(/databases/$(database)/documents/users/$(userId));
+    }
+
+    function selfKeepsProtectedFields(userId) {
+      return request.auth.uid == userId
+        && request.resource.data.team == resource.data.team
+        && request.resource.data.approved == resource.data.approved;
+    }
+
+    function ownerPendingRecordCreate(userId) {
+      return request.auth.uid == userId
+        && request.resource.data.uid == userId
+        && request.resource.data.team == currentUser().data.team
+        && request.resource.data.approvalStatus == 'pending'
+        && request.resource.data.keys().hasOnly([
+          'uid',
+          'ownerName',
+          'ownerEmail',
+          'team',
+          'date',
+          'startDate',
+          'endDate',
+          'type',
+          'days',
+          'reason',
+          'memo',
+          'note',
+          'approvalStatus',
+          'approvalMemo',
+          'createdAt',
+          'updatedAt'
+        ]);
+    }
+
+    function ownerPendingRecordUpdate(userId) {
+      return request.auth.uid == userId
+        && resource.data.approvalStatus == 'pending'
+        && request.resource.data.uid == userId
+        && request.resource.data.team == currentUser().data.team
+        && request.resource.data.approvalStatus == 'pending'
+        && request.resource.data.keys().hasOnly([
+          'uid',
+          'ownerName',
+          'ownerEmail',
+          'team',
+          'date',
+          'startDate',
+          'endDate',
+          'type',
+          'days',
+          'reason',
+          'memo',
+          'note',
+          'approvalStatus',
+          'approvalMemo',
+          'createdAt',
+          'updatedAt'
+        ]);
+    }
+
+    function ownerPendingRecordDelete(userId) {
+      return request.auth.uid == userId
+        && resource.data.approvalStatus == 'pending';
+    }
+
     match /users/{userId} {
-      allow read, write: if request.auth != null && request.auth.uid == userId;
+      allow read: if signedIn();
+      allow create: if signedIn()
+        && request.auth.uid == userId
+        && request.resource.data.team != '최고관리자'
+        && request.resource.data.approved == false;
+      allow update: if signedIn() && (isAdmin() || selfKeepsProtectedFields(userId));
+      allow delete: if signedIn() && (request.auth.uid == userId || isAdmin());
     }
 
     match /users/{userId}/leaveSettings/{year} {
-      allow read, write: if request.auth != null && request.auth.uid == userId;
+      allow read: if signedIn()
+        && (
+          request.auth.uid == userId
+          || isAdmin()
+          || sameTeam(targetUser(userId).data.team)
+        );
+      allow create, update, delete: if signedIn() && (request.auth.uid == userId || isAdmin());
     }
 
     match /users/{userId}/leaveRecords/{recordId} {
-      allow read: if request.auth != null;
-      allow create, update, delete: if request.auth != null && request.auth.uid == userId;
+      allow read: if signedIn();
+      allow create: if signedIn() && (isAdmin() || ownerPendingRecordCreate(userId));
+      allow update: if signedIn() && (isAdmin() || ownerPendingRecordUpdate(userId));
+      allow delete: if signedIn() && (isAdmin() || ownerPendingRecordDelete(userId));
     }
 
     match /{path=**}/leaveRecords/{recordId} {
-      allow read: if request.auth != null;
+      allow read: if signedIn();
+    }
+
+    match /{path=**}/leaveSettings/{year} {
+      allow read: if signedIn() && (isAdmin() || sameTeam(resource.data.team));
     }
   }
 }
