@@ -19,8 +19,6 @@
       <SummaryCard label="조회 범위" :value="scopeLabel" tone="primary" />
       <SummaryCard label="등록 회원" :value="`${totalMembers}명`" />
       <SummaryCard label="승인 대기" :value="`${pendingRecords}건`" tone="muted" />
-      <SummaryCard label="전체 사용 연차" :value="formatLeaveDays(usedLeaveDays)" tone="muted" />
-      <SummaryCard label="전체 잔여 연차" :value="formatLeaveDays(remainingLeaveDays)" tone="primary" />
     </div>
 
     <section class="content-panel">
@@ -102,8 +100,6 @@ const paginatedStatuses = computed(() => {
 })
 const scopeLabel = computed(() => authStore.isAdmin ? '전체 팀' : authStore.profile?.team ?? '내 팀')
 const totalMembers = computed(() => statuses.value.length)
-const usedLeaveDays = computed(() => statuses.value.reduce((sum, member) => sum + member.summary.used, 0))
-const remainingLeaveDays = computed(() => statuses.value.reduce((sum, member) => sum + member.summary.remaining, 0))
 const pendingRecords = computed(() => statuses.value.reduce((sum, member) => sum + member.pendingRecordsCount, 0))
 
 watch(
@@ -120,6 +116,7 @@ const refreshStatuses = async () => {
 
 <style scoped lang="scss">
 </style>
+
 
 
 
