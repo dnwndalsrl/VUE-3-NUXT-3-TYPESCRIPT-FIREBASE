@@ -30,7 +30,7 @@ const props = withDefaults(
 const displayMessage = computed(() => props.message.trim() || '불러오는 중입니다.')
 </script>
 
-<style scoped lang="scss">
+<style lang="scss">
 .app-loading {
   display: inline-flex;
   align-items: center;

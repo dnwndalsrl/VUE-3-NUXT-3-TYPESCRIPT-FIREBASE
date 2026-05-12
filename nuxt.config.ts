@@ -30,10 +30,11 @@ if (existsSync(envPath)) {
 const env = (key: string) => process.env[key] ?? ''
 
 export default defineNuxtConfig({
+  ssr: false,
   compatibilityDate: '2024-10-01',
   devtools: { enabled: true },
   modules: ['@pinia/nuxt'],
-  css: ['~/assets/scss/main.scss'],
+  css: ['~/assets/css/reset.css', '~/assets/scss/main.scss'],
   typescript: {
     strict: true,
     typeCheck: true
@@ -60,4 +61,6 @@ export default defineNuxtConfig({
     }
   }
 })
+
+
 

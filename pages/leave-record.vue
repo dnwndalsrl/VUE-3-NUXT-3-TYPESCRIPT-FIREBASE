@@ -51,7 +51,21 @@ const handleSubmit = async (record: LeaveRecord) => {
 }
 </script>
 
-<style scoped lang="scss">
-</style>
+<style lang="scss">
+.approval-note {
+  display: grid;
+  gap: 6px;
+  margin-bottom: 18px;
+}
 
+.approval-note strong,
+.approval-note p {
+  margin: 0;
+}
+
+.approval-note p {
+  color: var(--color-muted);
+  line-height: 1.5;
+}
+</style>
 

@@ -89,8 +89,47 @@ const signup = async () => {
 }
 </script>
 
-<style scoped lang="scss">
+<style lang="scss">
+.login-page {
+  display: grid;
+  min-height: 100vh;
+  place-items: center;
+  padding: 24px;
+}
+
+.login-card {
+  width: min(420px, 100%);
+  padding: 32px;
+}
+
+.login-card h1 {
+  margin: 8px 0 10px;
+  color: var(--color-primary);
+  font-size: 42px;
+}
+
+.login-card__copy {
+  margin: 0 0 24px;
+  color: var(--color-muted);
+  line-height: 1.6;
+}
+
+.login-form {
+  display: grid;
+  gap: 14px;
+}
+
+.login-card__link {
+  margin: 16px 0 0;
+  color: var(--color-muted);
+  font-size: 14px;
+  font-weight: 700;
+  text-align: center;
+}
+
+.login-card__link a {
+  color: var(--color-primary);
+  font-weight: 900;
+}
 </style>
-
-
 

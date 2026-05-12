@@ -163,6 +163,160 @@ watch(
 )
 </script>
 
-<style scoped lang="scss">
+<style lang="scss">
+.dashboard-members-panel {
+  margin-bottom: 24px;
+}
+
+.dashboard-members-panel .panel-header p {
+  margin: 4px 0 0;
+  color: var(--color-muted);
+  font-weight: 700;
+}
+
+.member-presence-list {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 10px;
+}
+
+.member-presence-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  min-height: 72px;
+  padding: 14px;
+  border: 1px solid var(--color-line);
+  border-radius: 8px;
+  background: #ffffff;
+}
+
+.member-presence-item strong,
+.member-presence-item span {
+  display: block;
+}
+
+.member-presence-item div > span {
+  margin-top: 4px;
+  color: var(--color-muted);
+  font-size: 13px;
+  font-weight: 700;
+}
+
+.dashboard-balance-layout {
+  display: grid;
+  grid-template-columns: minmax(320px, 1.25fr) minmax(320px, 1fr);
+  gap: 16px;
+  margin-bottom: 24px;
+}
+
+.leave-balance-panel,
+.leave-metric-item {
+  background: var(--color-panel);
+  border: 1px solid var(--color-line);
+  border-radius: 8px;
+  box-shadow: var(--shadow-panel);
+}
+
+.leave-balance-panel {
+  display: grid;
+  align-content: space-between;
+  min-height: 244px;
+  padding: 28px;
+  border-color: rgba(37, 71, 147, 0.28);
+  background: linear-gradient(135deg, #ffffff 0%, #edf3ff 100%);
+}
+
+.leave-balance-panel span,
+.leave-metric-item span {
+  color: var(--color-muted);
+  font-weight: 800;
+}
+
+.leave-balance-panel strong {
+  display: block;
+  margin-top: 12px;
+  color: var(--color-primary);
+  font-size: clamp(58px, 8vw, 92px);
+  line-height: 0.95;
+}
+
+.leave-balance-panel p {
+  margin: 14px 0 0;
+  color: #344054;
+  font-weight: 800;
+}
+
+.leave-progress {
+  overflow: hidden;
+  height: 12px;
+  margin-top: 28px;
+  border-radius: 999px;
+  background: rgba(37, 71, 147, 0.12);
+}
+
+.leave-progress span {
+  display: block;
+  height: 100%;
+  border-radius: inherit;
+  background: var(--color-primary);
+}
+
+.leave-metrics-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 16px;
+}
+
+.leave-metric-item {
+  display: grid;
+  align-content: center;
+  min-height: 114px;
+  padding: 20px;
+}
+
+.leave-metric-item strong {
+  display: block;
+  margin-top: 10px;
+  color: var(--color-text);
+  font-size: 30px;
+  line-height: 1;
+}
+
+.leave-metric-item--attention {
+  background: #fff7ed;
+  border-color: rgba(180, 83, 9, 0.24);
+}
+
+.leave-metric-item--attention strong {
+  color: #9a3412;
+}
+
+.panel-header :deep(.app-button) {
+  min-height: 38px;
+}
+
+@media (max-width: 980px) {
+  .dashboard-balance-layout {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 560px) {
+  .member-presence-item {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+
+  .leave-metrics-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .leave-balance-panel {
+    min-height: 220px;
+    padding: 24px;
+  }
+}
 </style>
 

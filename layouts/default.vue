@@ -33,6 +33,6 @@ const navItems = computed(() => [
 ])
 </script>
 
-<style scoped lang="scss">
+<style lang="scss">
 </style>
 

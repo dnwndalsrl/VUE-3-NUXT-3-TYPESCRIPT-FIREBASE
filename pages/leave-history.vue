@@ -215,6 +215,35 @@ const removeRecord = async (record: LeaveRecord) => {
 }
 </script>
 
-<style scoped lang="scss">
+<style lang="scss">
+.history-layout {
+  display: grid;
+  grid-template-columns: minmax(0, 1.1fr) minmax(320px, 0.9fr);
+  gap: 18px;
+  align-items: start;
+}
+
+.history-filter-panel {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(160px, 1fr)) auto;
+  gap: 12px;
+  align-items: end;
+  margin-bottom: 18px;
+}
+
+.approval-locked-text {
+  display: block;
+  margin-top: 8px;
+  color: var(--color-muted);
+  font-size: 13px;
+  font-weight: 700;
+}
+
+@media (max-width: 860px) {
+  .history-layout,
+  .history-filter-panel {
+    grid-template-columns: 1fr;
+  }
+}
 </style>
 

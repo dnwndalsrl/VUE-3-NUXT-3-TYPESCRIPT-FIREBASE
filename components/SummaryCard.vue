@@ -14,6 +14,6 @@ defineProps<{
 }>()
 </script>
 
-<style scoped lang="scss">
+<style lang="scss">
 </style>
 
