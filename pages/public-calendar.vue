@@ -1,5 +1,5 @@
 ﻿<template>
-  <section class="page page--wide">
+  <section class="page page--wide public-calendar-page">
     <header class="page-header calendar-header">
       <div>
         <p class="eyebrow">Shared Calendar</p>
@@ -222,11 +222,11 @@ const refreshPublicCalendar = async () => {
 </script>
 
 <style lang="scss">
-.calendar-header {
+.public-calendar-page .calendar-header {
   align-items: end;
 }
 
-.calendar-controls {
+.public-calendar-page .calendar-controls {
   display: flex;
   flex-wrap: wrap;
   align-items: end;
@@ -234,39 +234,39 @@ const refreshPublicCalendar = async () => {
   gap: 10px;
 }
 
-.calendar-month-field {
+.public-calendar-page .calendar-month-field {
   min-width: 180px;
 }
 
-.calendar-month-users-panel {
+.public-calendar-page .calendar-month-users-panel {
   margin-bottom: 18px;
 }
 
-.calendar-month-users-panel .panel-header p {
+.public-calendar-page .calendar-month-users-panel .panel-header p {
   margin: 4px 0 0;
   color: var(--color-muted);
   font-weight: 700;
 }
 
-.calendar-month-users-list {
+.public-calendar-page .calendar-month-users-list {
   grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
 }
 
-.calendar-month-users-list .record-item {
+.public-calendar-page .calendar-month-users-list .record-item {
   min-height: 96px;
 }
 
-.calendar-panel {
+.public-calendar-page .calendar-panel {
   overflow: hidden;
 }
 
-.calendar-weekdays,
-.calendar-grid {
+.public-calendar-page .calendar-weekdays,
+.public-calendar-page .calendar-grid {
   display: grid;
   grid-template-columns: repeat(7, minmax(0, 1fr));
 }
 
-.calendar-weekdays {
+.public-calendar-page .calendar-weekdays {
   margin-bottom: 8px;
   color: var(--color-muted);
   font-size: 13px;
@@ -274,12 +274,12 @@ const refreshPublicCalendar = async () => {
   text-align: center;
 }
 
-.calendar-grid {
+.public-calendar-page .calendar-grid {
   border-top: 1px solid var(--color-line);
   border-left: 1px solid var(--color-line);
 }
 
-.calendar-day {
+.public-calendar-page .calendar-day {
   display: grid;
   align-content: start;
   min-height: 132px;
@@ -289,16 +289,16 @@ const refreshPublicCalendar = async () => {
   background: #ffffff;
 }
 
-.calendar-day--muted {
+.public-calendar-page .calendar-day--muted {
   background: #f8fafc;
   color: #94a3b8;
 }
 
-.calendar-day--today {
+.public-calendar-page .calendar-day--today {
   box-shadow: inset 0 0 0 2px rgba(37, 71, 147, 0.65);
 }
 
-.calendar-day__top {
+.public-calendar-page .calendar-day__top {
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -306,11 +306,11 @@ const refreshPublicCalendar = async () => {
   margin-bottom: 8px;
 }
 
-.calendar-day__top strong {
+.public-calendar-page .calendar-day__top strong {
   font-size: 15px;
 }
 
-.calendar-day__top span {
+.public-calendar-page .calendar-day__top span {
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -323,12 +323,12 @@ const refreshPublicCalendar = async () => {
   font-weight: 900;
 }
 
-.calendar-events {
+.public-calendar-page .calendar-events {
   display: grid;
   gap: 6px;
 }
 
-.calendar-event {
+.public-calendar-page .calendar-event {
   display: grid;
   gap: 2px;
   padding: 7px 8px;
@@ -338,41 +338,41 @@ const refreshPublicCalendar = async () => {
   color: #1e3a8a;
 }
 
-.calendar-event span,
-.calendar-event small {
+.public-calendar-page .calendar-event span,
+.public-calendar-page .calendar-event small {
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
 }
 
-.calendar-event span {
+.public-calendar-page .calendar-event span {
   font-size: 12px;
   font-weight: 900;
 }
 
-.calendar-event small {
+.public-calendar-page .calendar-event small {
   font-size: 11px;
 }
 
-.calendar-event--morning {
+.public-calendar-page .calendar-event--morning {
   border-left-color: #0f766e;
   background: #ecfdf5;
   color: #115e59;
 }
 
-.calendar-event--afternoon {
+.public-calendar-page .calendar-event--afternoon {
   border-left-color: #b45309;
   background: #fff7ed;
   color: #92400e;
 }
 
-.calendar-event--reserveTraining {
+.public-calendar-page .calendar-event--reserveTraining {
   border-left-color: #64748b;
   background: #f1f5f9;
   color: #334155;
 }
 
-.calendar-more {
+.public-calendar-page .calendar-more {
   min-height: 28px;
   border: 0;
   border-radius: 6px;
@@ -383,30 +383,36 @@ const refreshPublicCalendar = async () => {
   font-weight: 900;
 }
 
-.calendar-upcoming-item {
+.public-calendar-page .calendar-upcoming-item {
   align-items: flex-start;
 }
 
 @media (max-width: 860px) {
-  .calendar-header {
+  .public-calendar-page .calendar-header {
     align-items: stretch;
   }
 
-  .calendar-controls {
+  .public-calendar-page .calendar-controls {
     justify-content: stretch;
   }
 
-  .calendar-controls :deep(.app-button),
-  .calendar-month-field {
+  .public-calendar-page .calendar-controls .app-button,
+  .public-calendar-page .calendar-month-field {
     flex: 1 1 150px;
   }
 
-  .calendar-grid {
-    overflow-x: auto;
+  .public-calendar-page .calendar-grid {
+    overflow: visible;
   }
 
-  .calendar-weekdays,
-  .calendar-grid {
+  .public-calendar-page .calendar-panel {
+    overflow-x: auto;
+    overflow-y: visible;
+  }
+
+  .public-calendar-page .calendar-weekdays,
+  .public-calendar-page .calendar-grid {
+    width: 760px;
     min-width: 760px;
   }
 }

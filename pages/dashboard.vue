@@ -143,11 +143,13 @@ const todayLeaveByUid = computed(() => {
   return map
 })
 const memberTodayStatuses = computed(() =>
-  leaveStore.sortedAllMemberStatuses.map((member) => ({
-    ...member,
-    leaveLabel: todayLeaveByUid.value.get(member.uid) ?? '',
-    onLeave: todayLeaveByUid.value.has(member.uid)
-  }))
+  leaveStore.sortedAllMemberStatuses
+    .map((member) => ({
+      ...member,
+      leaveLabel: todayLeaveByUid.value.get(member.uid) ?? '',
+      onLeave: todayLeaveByUid.value.has(member.uid)
+    }))
+    .sort((first, second) => Number(second.onLeave) - Number(first.onLeave) || first.displayName.localeCompare(second.displayName))
 )
 const paginatedMemberStatuses = computed(() => {
   const start = (memberPage.value - 1) * pageSize
@@ -164,23 +166,23 @@ watch(
 </script>
 
 <style lang="scss">
-.dashboard-members-panel {
+.dashboard-page .dashboard-members-panel {
   margin-bottom: 24px;
 }
 
-.dashboard-members-panel .panel-header p {
+.dashboard-page .dashboard-members-panel .panel-header p {
   margin: 4px 0 0;
   color: var(--color-muted);
   font-weight: 700;
 }
 
-.member-presence-list {
+.dashboard-page .member-presence-list {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
   gap: 10px;
 }
 
-.member-presence-item {
+.dashboard-page .member-presence-item {
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -192,34 +194,42 @@ watch(
   background: #ffffff;
 }
 
-.member-presence-item strong,
-.member-presence-item span {
+.dashboard-page .member-presence-item div strong,
+.dashboard-page .member-presence-item div span {
   display: block;
 }
 
-.member-presence-item div > span {
+.dashboard-page .member-presence-item div > span {
   margin-top: 4px;
   color: var(--color-muted);
   font-size: 13px;
   font-weight: 700;
 }
 
-.dashboard-balance-layout {
+.dashboard-page .member-presence-item .status-badge {
+  display: inline-flex;
+  align-items: center;
+  min-height: 30px;
+  margin-top: 0;
+  line-height: 1.2;
+}
+
+.dashboard-page .dashboard-balance-layout {
   display: grid;
   grid-template-columns: minmax(320px, 1.25fr) minmax(320px, 1fr);
   gap: 16px;
   margin-bottom: 24px;
 }
 
-.leave-balance-panel,
-.leave-metric-item {
+.dashboard-page .leave-balance-panel,
+.dashboard-page .leave-metric-item {
   background: var(--color-panel);
   border: 1px solid var(--color-line);
   border-radius: 8px;
   box-shadow: var(--shadow-panel);
 }
 
-.leave-balance-panel {
+.dashboard-page .leave-balance-panel {
   display: grid;
   align-content: space-between;
   min-height: 244px;
@@ -228,13 +238,13 @@ watch(
   background: linear-gradient(135deg, #ffffff 0%, #edf3ff 100%);
 }
 
-.leave-balance-panel span,
-.leave-metric-item span {
+.dashboard-page .leave-balance-panel span,
+.dashboard-page .leave-metric-item span {
   color: var(--color-muted);
   font-weight: 800;
 }
 
-.leave-balance-panel strong {
+.dashboard-page .leave-balance-panel strong {
   display: block;
   margin-top: 12px;
   color: var(--color-primary);
@@ -242,13 +252,13 @@ watch(
   line-height: 0.95;
 }
 
-.leave-balance-panel p {
+.dashboard-page .leave-balance-panel p {
   margin: 14px 0 0;
   color: #344054;
   font-weight: 800;
 }
 
-.leave-progress {
+.dashboard-page .leave-progress {
   overflow: hidden;
   height: 12px;
   margin-top: 28px;
@@ -256,27 +266,27 @@ watch(
   background: rgba(37, 71, 147, 0.12);
 }
 
-.leave-progress span {
+.dashboard-page .leave-progress span {
   display: block;
   height: 100%;
   border-radius: inherit;
   background: var(--color-primary);
 }
 
-.leave-metrics-grid {
+.dashboard-page .leave-metrics-grid {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 16px;
 }
 
-.leave-metric-item {
+.dashboard-page .leave-metric-item {
   display: grid;
   align-content: center;
   min-height: 114px;
   padding: 20px;
 }
 
-.leave-metric-item strong {
+.dashboard-page .leave-metric-item strong {
   display: block;
   margin-top: 10px;
   color: var(--color-text);
@@ -284,36 +294,36 @@ watch(
   line-height: 1;
 }
 
-.leave-metric-item--attention {
+.dashboard-page .leave-metric-item--attention {
   background: #fff7ed;
   border-color: rgba(180, 83, 9, 0.24);
 }
 
-.leave-metric-item--attention strong {
+.dashboard-page .leave-metric-item--attention strong {
   color: #9a3412;
 }
 
-.panel-header :deep(.app-button) {
+.dashboard-page .panel-header .app-button {
   min-height: 38px;
 }
 
 @media (max-width: 980px) {
-  .dashboard-balance-layout {
+  .dashboard-page .dashboard-balance-layout {
     grid-template-columns: 1fr;
   }
 }
 
 @media (max-width: 560px) {
-  .member-presence-item {
+  .dashboard-page .member-presence-item {
     align-items: flex-start;
     flex-direction: column;
   }
 
-  .leave-metrics-grid {
+  .dashboard-page .leave-metrics-grid {
     grid-template-columns: 1fr;
   }
 
-  .leave-balance-panel {
+  .dashboard-page .leave-balance-panel {
     min-height: 220px;
     padding: 24px;
   }

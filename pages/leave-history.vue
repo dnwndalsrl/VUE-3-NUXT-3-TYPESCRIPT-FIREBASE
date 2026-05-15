@@ -1,5 +1,5 @@
 ﻿<template>
-  <section class="page">
+  <section class="page leave-history-page">
     <header class="page-header">
       <div>
         <p class="eyebrow">History</p>
@@ -97,19 +97,57 @@
         <p v-else class="empty-state">조건에 맞는 사용 내역이 없습니다.</p>
       </section>
 
-      <section v-if="editingRecord" class="content-panel">
-        <div class="panel-header">
-          <h2>내역 수정</h2>
-        </div>
-        <p v-if="!authStore.isAdmin" class="approval-edit-hint">수정한 연차는 다시 승인 대기 상태로 전환됩니다.</p>
-        <LeaveRecordForm
-          :initial-value="editingRecord"
-          :busy="busy"
-          submit-label="수정 저장"
-          @submit="updateRecord"
-          @cancel="editingRecord = null"
-        />
-      </section>
+      <aside class="history-side-stack">
+        <section class="content-panel history-insight-panel">
+          <div class="panel-header">
+            <div>
+              <h2>기록 요약</h2>
+              <p>현재 필터 기준</p>
+            </div>
+            <span>{{ historyInsight.totalCount }}건</span>
+          </div>
+
+          <div class="history-insight-main">
+            <span>승인 반영 일수</span>
+            <strong>{{ formatLeaveDays(historyInsight.approvedDays) }}</strong>
+            <p>승인된 기록만 잔여 연차와 캘린더에 반영됩니다.</p>
+          </div>
+
+          <div class="history-insight-grid">
+            <article>
+              <span>승인 대기</span>
+              <strong>{{ historyInsight.pendingCount }}건</strong>
+            </article>
+            <article>
+              <span>비승인</span>
+              <strong>{{ historyInsight.rejectedCount }}건</strong>
+            </article>
+            <article>
+              <span>특별휴가</span>
+              <strong>{{ historyInsight.specialCount }}건</strong>
+            </article>
+          </div>
+
+          <div class="history-guidance">
+            <strong>{{ guidanceTitle }}</strong>
+            <p>{{ guidanceDescription }}</p>
+          </div>
+        </section>
+
+        <section v-if="editingRecord" class="content-panel">
+          <div class="panel-header">
+            <h2>내역 수정</h2>
+          </div>
+          <p v-if="!authStore.isAdmin" class="approval-edit-hint">수정한 연차는 다시 승인 대기 상태로 전환됩니다.</p>
+          <LeaveRecordForm
+            :initial-value="editingRecord"
+            :busy="busy"
+            submit-label="수정 저장"
+            @submit="updateRecord"
+            @cancel="editingRecord = null"
+          />
+        </section>
+      </aside>
     </div>
   </section>
 </template>
@@ -155,6 +193,72 @@ const paginatedRecords = computed(() => {
   const start = (recordPage.value - 1) * pageSize
   return leaveStore.filteredRecords.slice(start, start + pageSize)
 })
+const historyInsight = computed(() => {
+  const records = leaveStore.filteredRecords
+
+  return records.reduce(
+    (summary, record) => {
+      const status = getLeaveApprovalStatus(record)
+
+      if (status === 'approved') {
+        summary.approvedDays += record.days ?? getLeaveDays(record.type)
+      }
+
+      if (status === 'pending') {
+        summary.pendingCount += 1
+      }
+
+      if (status === 'rejected') {
+        summary.rejectedCount += 1
+      }
+
+      if (record.type === 'reserveTraining') {
+        summary.specialCount += 1
+      }
+
+      summary.totalCount += 1
+
+      return summary
+    },
+    {
+      totalCount: 0,
+      approvedDays: 0,
+      pendingCount: 0,
+      rejectedCount: 0,
+      specialCount: 0
+    }
+  )
+})
+const guidanceTitle = computed(() => {
+  if (!historyInsight.value.totalCount) {
+    return '조회된 기록이 없습니다.'
+  }
+
+  if (historyInsight.value.pendingCount) {
+    return '승인 대기 기록을 확인해 주세요.'
+  }
+
+  if (historyInsight.value.rejectedCount) {
+    return '비승인 기록은 필요 시 다시 등록할 수 있습니다.'
+  }
+
+  return '현재 필터의 기록이 모두 정리되어 있습니다.'
+})
+const guidanceDescription = computed(() => {
+  if (!historyInsight.value.totalCount) {
+    return '연도, 월, 사용 유형 필터를 조정하거나 새 연차를 등록해 주세요.'
+  }
+
+  if (historyInsight.value.pendingCount) {
+    return '승인 전 기록은 잔여 연차와 공용 캘린더에 반영되지 않습니다.'
+  }
+
+  if (historyInsight.value.rejectedCount) {
+    return '비승인된 기록은 관리자 검토 결과를 확인한 뒤 다시 신청하는 흐름이 좋습니다.'
+  }
+
+  return '승인된 사용 일수만 실제 사용 연차로 계산되고 있습니다.'
+})
 
 watch(
   () => [leaveStore.filteredRecords.length, leaveStore.historyFilters.year, leaveStore.historyFilters.month, leaveStore.historyFilters.type],
@@ -185,7 +289,7 @@ const updateRecord = async (record: LeaveRecord) => {
   try {
     await leaveStore.updateRecord(authStore.user.uid, editingRecord.value.id, record)
     editingRecord.value = null
-  } catch (error) {
+  } catch (error: unknown) {
     errorMessage.value = error instanceof Error ? error.message : '사용 내역을 수정하지 못했습니다.'
   } finally {
     busy.value = false
@@ -209,21 +313,21 @@ const removeRecord = async (record: LeaveRecord) => {
   errorMessage.value = ''
   try {
     await leaveStore.deleteRecord(authStore.user.uid, record.id)
-  } catch (error) {
+  } catch (error: unknown) {
     errorMessage.value = error instanceof Error ? error.message : '사용 내역을 삭제하지 못했습니다.'
   }
 }
 </script>
 
 <style lang="scss">
-.history-layout {
+.leave-history-page .history-layout {
   display: grid;
   grid-template-columns: minmax(0, 1.1fr) minmax(320px, 0.9fr);
   gap: 18px;
   align-items: start;
 }
 
-.history-filter-panel {
+.leave-history-page .history-filter-panel {
   display: grid;
   grid-template-columns: repeat(3, minmax(160px, 1fr)) auto;
   gap: 12px;
@@ -231,7 +335,7 @@ const removeRecord = async (record: LeaveRecord) => {
   margin-bottom: 18px;
 }
 
-.approval-locked-text {
+.leave-history-page .approval-locked-text {
   display: block;
   margin-top: 8px;
   color: var(--color-muted);
@@ -239,9 +343,94 @@ const removeRecord = async (record: LeaveRecord) => {
   font-weight: 700;
 }
 
+.leave-history-page .history-side-stack {
+  display: grid;
+  gap: 18px;
+}
+
+.leave-history-page .history-insight-panel .panel-header p {
+  margin: 4px 0 0;
+  color: var(--color-muted);
+  font-weight: 700;
+}
+
+.leave-history-page .history-insight-main {
+  display: grid;
+  gap: 8px;
+  padding: 20px;
+  border: 1px solid rgba(37, 71, 147, 0.22);
+  border-radius: 8px;
+  background: linear-gradient(135deg, #ffffff 0%, #edf3ff 100%);
+}
+
+.leave-history-page .history-insight-main span,
+.leave-history-page .history-insight-grid span {
+  color: var(--color-muted);
+  font-size: 13px;
+  font-weight: 800;
+}
+
+.leave-history-page .history-insight-main strong {
+  color: var(--color-primary);
+  font-size: 42px;
+  line-height: 1;
+}
+
+.leave-history-page .history-insight-main p {
+  margin: 0;
+  color: #344054;
+  font-weight: 700;
+  line-height: 1.5;
+}
+
+.leave-history-page .history-insight-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 10px;
+  margin-top: 12px;
+}
+
+.leave-history-page .history-insight-grid article {
+  display: grid;
+  gap: 8px;
+  min-height: 92px;
+  padding: 16px;
+  border: 1px solid var(--color-line);
+  border-radius: 8px;
+  background: #ffffff;
+}
+
+.leave-history-page .history-insight-grid strong {
+  color: var(--color-text);
+  font-size: 22px;
+  line-height: 1;
+}
+
+.leave-history-page .history-guidance {
+  display: grid;
+  gap: 6px;
+  margin-top: 12px;
+  padding: 16px;
+  border-radius: 8px;
+  background: #f8fafc;
+}
+
+.leave-history-page .history-guidance p {
+  margin: 0;
+  color: var(--color-muted);
+  font-weight: 700;
+  line-height: 1.5;
+}
+
 @media (max-width: 860px) {
-  .history-layout,
-  .history-filter-panel {
+  .leave-history-page .history-layout,
+  .leave-history-page .history-filter-panel {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 520px) {
+  .leave-history-page .history-insight-grid {
     grid-template-columns: 1fr;
   }
 }

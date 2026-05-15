@@ -1,5 +1,5 @@
 ﻿<template>
-  <section class="page page--wide">
+  <section class="page page--wide settings-page">
     <header class="page-header">
       <div>
         <p class="eyebrow">Admin Settings</p>
@@ -341,25 +341,25 @@ const reviewRecord = async (record: PublicLeaveRecord, status: 'approved' | 'rej
 </script>
 
 <style lang="scss">
-.settings-admin-layout {
+.settings-page .settings-admin-layout {
   display: grid;
   grid-template-columns: minmax(260px, 360px) minmax(0, 1fr);
   gap: 18px;
   align-items: start;
 }
 
-.settings-member-list-group {
+.settings-page .settings-member-list-group {
   display: grid;
   gap: 12px;
 }
 
-.settings-member-list {
+.settings-page .settings-member-list {
   display: grid;
   gap: 10px;
   margin-top: 16px;
 }
 
-.settings-member {
+.settings-page .settings-member {
   display: grid;
   gap: 4px;
   width: 100%;
@@ -372,53 +372,53 @@ const reviewRecord = async (record: PublicLeaveRecord, status: 'approved' | 'rej
   text-align: left;
 }
 
-.settings-member strong,
-.settings-member span {
+.settings-page .settings-member strong,
+.settings-page .settings-member span {
   display: block;
 }
 
-.settings-member span,
-.settings-member small {
+.settings-page .settings-member span,
+.settings-page .settings-member small {
   color: var(--color-muted);
   font-size: 13px;
   font-weight: 700;
 }
 
-.settings-member small {
+.settings-page .settings-member small {
   margin-top: 4px;
 }
 
-.settings-member--active {
+.settings-page .settings-member--active {
   border-color: rgba(37, 71, 147, 0.4);
   background: #edf3ff;
 }
 
-.admin-setting-form {
+.settings-page .admin-setting-form {
   display: grid;
   gap: 16px;
 }
 
-.admin-setting-actions {
+.settings-page .admin-setting-actions {
   display: flex;
   flex-wrap: wrap;
   gap: 10px;
 }
 
-.approval-panel {
+.settings-page .approval-panel {
   margin-bottom: 18px;
 }
 
-.approval-panel .panel-header p {
+.settings-page .approval-panel .panel-header p {
   margin: 0;
   color: var(--color-muted);
   line-height: 1.5;
 }
 
-.approval-list {
+.settings-page .approval-list {
   margin-top: 12px;
 }
 
-.approval-item small {
+.settings-page .approval-item small {
   display: block;
   margin-top: 4px;
   color: var(--color-muted);
@@ -427,7 +427,7 @@ const reviewRecord = async (record: PublicLeaveRecord, status: 'approved' | 'rej
 }
 
 @media (max-width: 860px) {
-  .settings-admin-layout {
+  .settings-page .settings-admin-layout {
     grid-template-columns: 1fr;
   }
 }

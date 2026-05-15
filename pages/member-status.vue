@@ -1,5 +1,5 @@
 ﻿<template>
-  <section class="page page--wide">
+  <section class="page page--wide member-status-page">
     <header class="page-header">
       <div>
         <p class="eyebrow">Team Status · {{ scopeLabel }}</p>
@@ -115,58 +115,58 @@ const refreshStatuses = async () => {
 </script>
 
 <style lang="scss">
-.status-summary-grid {
+.member-status-page .status-summary-grid {
   grid-template-columns: repeat(3, minmax(160px, 1fr));
 }
 
-.status-controls {
+.member-status-page .status-controls {
   display: flex;
   align-items: end;
   gap: 10px;
 }
 
-.status-year-field {
+.member-status-page .status-year-field {
   min-width: 150px;
 }
 
-.status-table-wrap {
+.member-status-page .status-table-wrap {
   overflow-x: auto;
 }
 
-.status-table {
+.member-status-page .status-table {
   width: 100%;
   min-width: 720px;
   border-collapse: collapse;
 }
 
-.status-table th,
-.status-table td {
+.member-status-page .status-table th,
+.member-status-page .status-table td {
   padding: 15px 14px;
   border-bottom: 1px solid var(--color-line);
   text-align: left;
   vertical-align: middle;
 }
 
-.status-table th {
+.member-status-page .status-table th {
   color: var(--color-muted);
   font-size: 13px;
   font-weight: 800;
 }
 
-.status-table td {
+.member-status-page .status-table td {
   font-weight: 700;
 }
 
-.status-table td:first-child {
+.member-status-page .status-table td:first-child {
   min-width: 240px;
 }
 
-.status-table td:first-child strong,
-.status-table td:first-child span {
+.member-status-page .status-table td:first-child strong,
+.member-status-page .status-table td:first-child span {
   display: block;
 }
 
-.status-table td:first-child span {
+.member-status-page .status-table td:first-child span {
   margin-top: 4px;
   color: var(--color-muted);
   font-size: 13px;
@@ -174,27 +174,27 @@ const refreshStatuses = async () => {
   overflow-wrap: anywhere;
 }
 
-.status-table tbody tr:last-child td {
+.member-status-page .status-table tbody tr:last-child td {
   border-bottom: 0;
 }
 
-.status-table__remaining {
+.member-status-page .status-table__remaining {
   color: var(--color-primary);
   font-size: 18px;
 }
 
 @media (max-width: 860px) {
-  .status-summary-grid {
+  .member-status-page .status-summary-grid {
     grid-template-columns: 1fr;
   }
 
-  .status-controls {
+  .member-status-page .status-controls {
     align-items: stretch;
     flex-direction: column;
   }
 
-  .status-year-field,
-  .status-controls :deep(.app-button) {
+  .member-status-page .status-year-field,
+  .member-status-page .status-controls .app-button {
     width: 100%;
   }
 }

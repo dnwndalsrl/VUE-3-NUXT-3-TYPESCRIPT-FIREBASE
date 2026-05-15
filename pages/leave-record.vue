@@ -1,5 +1,5 @@
 ﻿<template>
-  <section class="page page--narrow">
+  <section class="page page--narrow leave-record-page">
     <header class="page-header">
       <div>
         <p class="eyebrow">Record</p>
@@ -52,18 +52,18 @@ const handleSubmit = async (record: LeaveRecord) => {
 </script>
 
 <style lang="scss">
-.approval-note {
+.leave-record-page .approval-note {
   display: grid;
   gap: 6px;
   margin-bottom: 18px;
 }
 
-.approval-note strong,
-.approval-note p {
+.leave-record-page .approval-note strong,
+.leave-record-page .approval-note p {
   margin: 0;
 }
 
-.approval-note p {
+.leave-record-page .approval-note p {
   color: var(--color-muted);
   line-height: 1.5;
 }
