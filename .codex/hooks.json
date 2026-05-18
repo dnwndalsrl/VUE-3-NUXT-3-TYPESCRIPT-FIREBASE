@@ -1,0 +1,29 @@
+{
+  "hooks": {
+    "SessionStart": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "powershell -NoProfile -ExecutionPolicy Bypass -File .phaseharness\\hooks\\codex-session-start.ps1",
+            "timeout": 30,
+            "statusMessage": "Syncing phaseharness bridges"
+          }
+        ],
+        "matcher": "startup|resume|clear"
+      }
+    ],
+    "Stop": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "powershell -NoProfile -ExecutionPolicy Bypass -File .phaseharness\\hooks\\codex-stop.ps1",
+            "timeout": 30,
+            "statusMessage": "Checking phaseharness state"
+          }
+        ]
+      }
+    ]
+  }
+}

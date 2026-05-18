@@ -1,0 +1,27 @@
+{
+  "hooks": {
+    "SessionStart": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "sh -c 'root=\"$(git -C \"${CLAUDE_PROJECT_DIR:-$PWD}\" rev-parse --show-toplevel 2>/dev/null || printf %s \"${CLAUDE_PROJECT_DIR:-$PWD}\")\"; f=\"$root/.phaseharness/hooks/claude-session-start.sh\"; [ -x \"$f\" ] && exec \"$f\"; exit 0'",
+            "timeout": 30
+          }
+        ],
+        "matcher": "startup|resume|clear|compact"
+      }
+    ],
+    "Stop": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "sh -c 'root=\"$(git -C \"${CLAUDE_PROJECT_DIR:-$PWD}\" rev-parse --show-toplevel 2>/dev/null || printf %s \"${CLAUDE_PROJECT_DIR:-$PWD}\")\"; f=\"$root/.phaseharness/hooks/claude-stop.sh\"; [ -x \"$f\" ] && exec \"$f\"; exit 0'",
+            "timeout": 30
+          }
+        ]
+      }
+    ]
+  }
+}

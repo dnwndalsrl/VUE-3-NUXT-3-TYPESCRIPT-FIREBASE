@@ -1,0 +1,79 @@
+{
+  "$schema": "./context.schema.json",
+  "schema_version": 1,
+  "context-gather": {
+    "documents": [
+      {
+        "path": "frontend_rules.md",
+        "description": "Required frontend rules for all generated Vue, TypeScript, Pinia, SCSS, loading, API, responsive, performance, and accessibility work.",
+        "priority": "required"
+      },
+      {
+        "path": "AGENTS.md",
+        "description": "Repository-wide AI development rules and required Phaseharness workflow policy.",
+        "priority": "required"
+      },
+      {
+        "path": "README.md",
+        "description": "Project overview and runtime guidance to consider when relevant.",
+        "priority": "recommended"
+      },
+      {
+        "path": "package.json",
+        "description": "Available scripts and framework dependencies for validation planning.",
+        "priority": "recommended"
+      }
+    ]
+  },
+  "plan": {
+    "instructions": [
+      "Preserve the existing architecture.",
+      "Do not perform unnecessary refactoring.",
+      "Split work into maintainable phases.",
+      "Each phase must include target files, allowed changes, forbidden changes, acceptance criteria, and validation commands.",
+      "Separate business logic, UI, state management, and Firebase integration responsibilities clearly."
+    ]
+  },
+  "generate": {
+    "instructions": [
+      "Generate production-quality code.",
+      "Reuse existing shared components first.",
+      "Preserve an extensible structure.",
+      "Do not modify files outside the phase scope.",
+      "Follow frontend_rules.md for TypeScript, Composition API, Pinia, loading, API, and SCSS rules."
+    ]
+  },
+  "evaluate": {
+    "documents": [
+      {
+        "path": "frontend_rules.md",
+        "description": "Primary review checklist for frontend rule compliance.",
+        "priority": "required"
+      },
+      {
+        "path": "AGENTS.md",
+        "description": "Global AI workflow and architecture constraints.",
+        "priority": "required"
+      },
+      {
+        "path": ".phaseharness/context.json",
+        "description": "Project-specific Phaseharness context, plan, generate, and evaluate rules.",
+        "priority": "required"
+      }
+    ],
+    "rules": [
+      "Do not use any type.",
+      "Apply a loading hook or explicit loading state for API or Firebase async calls.",
+      "Use try/catch/finally for API or Firebase async calls.",
+      "Use Composition API only.",
+      "Use script setup only in Vue files.",
+      "Use SCSS only for Vue styles.",
+      "Do not mutate Pinia state directly; enforce action-based updates.",
+      "Separate UI logic from business logic.",
+      "Avoid unnecessary watch usage.",
+      "Avoid complex calculations inside templates.",
+      "Preserve the existing project structure and shared component reuse policy.",
+      "For large feature work, leave clarify, context-gather, plan, generate, and evaluate workflow artifacts."
+    ]
+  }
+}
